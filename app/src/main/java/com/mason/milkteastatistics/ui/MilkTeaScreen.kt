@@ -43,6 +43,10 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
 import androidx.compose.material3.TopAppBarDefaults
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +62,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.mason.milkteastatistics.data.DailyStats
 import com.mason.milkteastatistics.data.MilkTeaRecord
 import java.text.SimpleDateFormat
+import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
@@ -186,8 +191,8 @@ fun MilkTeaScreen(
         AddEditRecordDialog(
             record = null,
             onDismiss = { showAddDialog = false },
-            onConfirm = { brand, price ->
-                viewModel.addRecord(brand, price)
+            onConfirm = { brand, price, timestamp ->
+                viewModel.addRecord(brand, price, timestamp)
                 showAddDialog = false
             },
         )
@@ -198,8 +203,8 @@ fun MilkTeaScreen(
         AddEditRecordDialog(
             record = record,
             onDismiss = { viewModel.cancelEdit() },
-            onConfirm = { brand, price ->
-                viewModel.updateRecord(record.copy(brand = brand, price = price))
+            onConfirm = { brand, price, timestamp ->
+                viewModel.updateRecord(record.copy(brand = brand, price = price, timestamp = timestamp))
                 viewModel.cancelEdit()
             },
         )
@@ -458,22 +463,32 @@ private fun MilkTeaRecordCard(
 
 // ==================== 添加/编辑弹窗 ====================
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddEditRecordDialog(
     record: MilkTeaRecord?,
     onDismiss: () -> Unit,
-    onConfirm: (brand: String, price: Double) -> Unit,
+    onConfirm: (brand: String, price: Double, timestamp: Long) -> Unit,
 ) {
     val isEdit = record != null
     var brand by remember(record) { mutableStateOf(record?.brand ?: "") }
     var price by remember(record) { mutableStateOf(record?.price?.toString() ?: "") }
     var priceError by remember { mutableStateOf(false) }
+    var selectedTimestamp by remember(record) {
+        mutableStateOf(record?.timestamp ?: System.currentTimeMillis())
+    }
+    var showDatePicker by remember { mutableStateOf(false) }
+    var showTimePicker by remember { mutableStateOf(false) }
+
+    val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
+    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
         title = { Text(if (isEdit) "编辑记录" else "添加奶茶记录") },
         text = {
             Column {
+                // 品牌
                 OutlinedTextField(
                     value = brand,
                     onValueChange = { brand = it },
@@ -483,6 +498,8 @@ private fun AddEditRecordDialog(
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(12.dp))
+
+                // 价格
                 OutlinedTextField(
                     value = price,
                     onValueChange = {
@@ -499,6 +516,39 @@ private fun AddEditRecordDialog(
                     } else null,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                Spacer(Modifier.height(12.dp))
+
+                // 日期/时间选择
+                Text(
+                    text = "时间",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                )
+                Spacer(Modifier.height(4.dp))
+                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                    OutlinedCard(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showDatePicker = true },
+                    ) {
+                        Text(
+                            text = dateFormat.format(Date(selectedTimestamp)),
+                            modifier = Modifier.padding(12.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                    OutlinedCard(
+                        modifier = Modifier
+                            .weight(1f)
+                            .clickable { showTimePicker = true },
+                    ) {
+                        Text(
+                            text = timeFormat.format(Date(selectedTimestamp)),
+                            modifier = Modifier.padding(12.dp),
+                            style = MaterialTheme.typography.bodyMedium,
+                        )
+                    }
+                }
             }
         },
         confirmButton = {
@@ -506,13 +556,116 @@ private fun AddEditRecordDialog(
                 onClick = {
                     val priceValue = price.toDoubleOrNull()
                     if (brand.isNotBlank() && priceValue != null && priceValue >= 0) {
-                        onConfirm(brand.trim(), priceValue)
+                        onConfirm(brand.trim(), priceValue, selectedTimestamp)
                     } else {
                         priceError = true
                     }
                 },
             ) {
                 Text(if (isEdit) "保存" else "添加")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        },
+    )
+
+    // 日期选择器
+    if (showDatePicker) {
+        DatePickerDialog(
+            onDismiss = { showDatePicker = false },
+            onConfirm = { millis ->
+                // 保留原时间，只更新日期部分
+                val cal = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
+                val pickerCal = Calendar.getInstance().apply { timeInMillis = millis }
+                cal.set(Calendar.YEAR, pickerCal.get(Calendar.YEAR))
+                cal.set(Calendar.MONTH, pickerCal.get(Calendar.MONTH))
+                cal.set(Calendar.DAY_OF_MONTH, pickerCal.get(Calendar.DAY_OF_MONTH))
+                selectedTimestamp = cal.timeInMillis
+                showDatePicker = false
+            },
+            initialDateMillis = selectedTimestamp,
+        )
+    }
+
+    // 时间选择器
+    if (showTimePicker) {
+        TimePickerDialog(
+            onDismiss = { showTimePicker = false },
+            onConfirm = { hour, minute ->
+                val cal = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
+                cal.set(Calendar.HOUR_OF_DAY, hour)
+                cal.set(Calendar.MINUTE, minute)
+                cal.set(Calendar.SECOND, 0)
+                cal.set(Calendar.MILLISECOND, 0)
+                selectedTimestamp = cal.timeInMillis
+                showTimePicker = false
+            },
+            initialHour = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
+                .get(Calendar.HOUR_OF_DAY),
+            initialMinute = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
+                .get(Calendar.MINUTE),
+        )
+    }
+}
+
+// ==================== 日期选择器弹窗 ====================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (Long) -> Unit,
+    initialDateMillis: Long,
+) {
+    val state = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
+    androidx.compose.material3.DatePickerDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(onClick = {
+                state.selectedDateMillis?.let { onConfirm(it) }
+            }) {
+                Text("确定")
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text("取消")
+            }
+        },
+    ) {
+        DatePicker(state = state)
+    }
+}
+
+// ==================== 时间选择器弹窗 ====================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun TimePickerDialog(
+    onDismiss: () -> Unit,
+    onConfirm: (hour: Int, minute: Int) -> Unit,
+    initialHour: Int,
+    initialMinute: Int,
+) {
+    val state = rememberTimePickerState(
+        initialHour = initialHour,
+        initialMinute = initialMinute,
+        is24Hour = true,
+    )
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("选择时间") },
+        text = {
+            TimePicker(state = state)
+        },
+        confirmButton = {
+            TextButton(onClick = {
+                onConfirm(state.hour, state.minute)
+            }) {
+                Text("确定")
             }
         },
         dismissButton = {

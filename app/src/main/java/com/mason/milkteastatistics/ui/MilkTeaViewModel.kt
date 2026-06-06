@@ -148,11 +148,11 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
 
     // ========== 操作 ==========
 
-    fun addRecord(brand: String, price: Double) {
+    fun addRecord(brand: String, price: Double, timestamp: Long = System.currentTimeMillis()) {
         viewModelScope.launch {
             repository.insert(
                 MilkTeaRecord(
-                    timestamp = System.currentTimeMillis(),
+                    timestamp = timestamp,
                     brand = brand,
                     price = price,
                 ),
