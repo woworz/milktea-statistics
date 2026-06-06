@@ -55,7 +55,12 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("消费统计") },
+                title = {
+                    Text(
+                        text = "消费统计",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,

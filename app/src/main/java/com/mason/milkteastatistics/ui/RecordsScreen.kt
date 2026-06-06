@@ -68,7 +68,12 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("记录") },
+                title = {
+                    Text(
+                        text = "记录",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
+                },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
                     titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,

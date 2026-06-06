@@ -67,13 +67,10 @@ fun HomeScreen(viewModel: MilkTeaViewModel) {
         topBar = {
             TopAppBar(
                 title = {
-                    Column {
-                        Text("🥤 奶茶统计")
-                        Text(
-                            text = "今日已喝 $todayCount 杯",
-                            style = MaterialTheme.typography.bodySmall,
-                        )
-                    }
+                    Text(
+                        text = "🥤 奶茶统计 · 今日 $todayCount 杯",
+                        style = MaterialTheme.typography.titleLarge,
+                    )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = MaterialTheme.colorScheme.primaryContainer,
