@@ -59,6 +59,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mason.milkteastatistics.data.CommonBrand
 import com.mason.milkteastatistics.data.DailyStats
 import com.mason.milkteastatistics.data.MilkTeaRecord
 import java.text.SimpleDateFormat
@@ -79,6 +80,7 @@ fun MilkTeaScreen(
     val filteredRecords by viewModel.filteredRecords.collectAsStateWithLifecycle()
     val dailyAggregates by viewModel.dailyAggregates.collectAsStateWithLifecycle()
     val editingRecord by viewModel.editingRecord.collectAsStateWithLifecycle()
+    val commonBrands by viewModel.commonBrands.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var chartMetric by remember { mutableStateOf(ChartMetric.COUNT) }
@@ -190,6 +192,9 @@ fun MilkTeaScreen(
     if (showAddDialog) {
         AddEditRecordDialog(
             record = null,
+            commonBrands = commonBrands,
+            onAddCommonBrand = { viewModel.addCommonBrand(it) },
+            onRemoveCommonBrand = { viewModel.removeCommonBrand(it) },
             onDismiss = { showAddDialog = false },
             onConfirm = { brand, drinkName, price, timestamp ->
                 viewModel.addRecord(brand, drinkName, price, timestamp)
@@ -202,6 +207,9 @@ fun MilkTeaScreen(
     editingRecord?.let { record ->
         AddEditRecordDialog(
             record = record,
+            commonBrands = commonBrands,
+            onAddCommonBrand = { viewModel.addCommonBrand(it) },
+            onRemoveCommonBrand = { viewModel.removeCommonBrand(it) },
             onDismiss = { viewModel.cancelEdit() },
             onConfirm = { brand, drinkName, price, timestamp ->
                 viewModel.updateRecord(record.copy(brand = brand, drinkName = drinkName, price = price, timestamp = timestamp))
@@ -475,6 +483,9 @@ private fun MilkTeaRecordCard(
 @Composable
 private fun AddEditRecordDialog(
     record: MilkTeaRecord?,
+    commonBrands: List<CommonBrand>,
+    onAddCommonBrand: (String) -> Unit,
+    onRemoveCommonBrand: (Long) -> Unit,
     onDismiss: () -> Unit,
     onConfirm: (brand: String, drinkName: String?, price: Double, timestamp: Long) -> Unit,
 ) {
@@ -488,6 +499,7 @@ private fun AddEditRecordDialog(
     }
     var showDatePicker by remember { mutableStateOf(false) }
     var showTimePicker by remember { mutableStateOf(false) }
+    var showManageBrands by remember { mutableStateOf(false) }
 
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
@@ -497,6 +509,34 @@ private fun AddEditRecordDialog(
         title = { Text(if (isEdit) "编辑记录" else "添加奶茶记录") },
         text = {
             Column {
+                // 常用品牌快捷标签
+                if (commonBrands.isNotEmpty()) {
+                    Text(
+                        text = "常用品牌",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                    Spacer(Modifier.height(6.dp))
+                    Row(
+                        modifier = Modifier.horizontalScroll(rememberScrollState()),
+                        horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        commonBrands.forEach { cb ->
+                            FilterChip(
+                                selected = brand == cb.name,
+                                onClick = { brand = if (brand == cb.name) "" else cb.name },
+                                label = { Text(cb.name) },
+                            )
+                        }
+                        FilterChip(
+                            selected = false,
+                            onClick = { showManageBrands = true },
+                            label = { Text("管理", style = MaterialTheme.typography.labelSmall) },
+                        )
+                    }
+                    Spacer(Modifier.height(10.dp))
+                }
+
                 // 品牌
                 OutlinedTextField(
                     value = brand,
@@ -602,7 +642,6 @@ private fun AddEditRecordDialog(
         DatePickerDialog(
             onDismiss = { showDatePicker = false },
             onConfirm = { millis ->
-                // 保留原时间，只更新日期部分
                 val cal = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
                 val pickerCal = Calendar.getInstance().apply { timeInMillis = millis }
                 cal.set(Calendar.YEAR, pickerCal.get(Calendar.YEAR))
@@ -634,6 +673,100 @@ private fun AddEditRecordDialog(
                 .get(Calendar.MINUTE),
         )
     }
+
+    // 常用品牌管理弹窗
+    if (showManageBrands) {
+        ManageBrandsDialog(
+            commonBrands = commonBrands,
+            currentInput = brand,
+            onAdd = { name ->
+                if (name.isNotBlank()) {
+                    onAddCommonBrand(name.trim())
+                }
+            },
+            onDelete = { onRemoveCommonBrand(it) },
+            onDismiss = { showManageBrands = false },
+        )
+    }
+}
+
+// ==================== 常用品牌管理弹窗 ====================
+
+@Composable
+private fun ManageBrandsDialog(
+    commonBrands: List<CommonBrand>,
+    currentInput: String,
+    onAdd: (String) -> Unit,
+    onDelete: (Long) -> Unit,
+    onDismiss: () -> Unit,
+) {
+    var newBrand by remember { mutableStateOf("") }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text("管理常用品牌") },
+        text = {
+            Column {
+                // 添加新品牌
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    OutlinedTextField(
+                        value = newBrand,
+                        onValueChange = { newBrand = it },
+                        placeholder = { Text("品牌名称") },
+                        singleLine = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    TextButton(
+                        onClick = {
+                            onAdd(newBrand)
+                            newBrand = ""
+                        },
+                        enabled = newBrand.isNotBlank(),
+                    ) {
+                        Text("添加")
+                    }
+                }
+
+                Spacer(Modifier.height(12.dp))
+
+                // 品牌列表
+                if (commonBrands.isEmpty()) {
+                    Text(
+                        text = "还没有常用品牌\n在输入框中添加",
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                } else {
+                    commonBrands.forEach { cb ->
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(vertical = 4.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            Text(
+                                text = cb.name,
+                                style = MaterialTheme.typography.bodyMedium,
+                                modifier = Modifier.weight(1f),
+                            )
+                            TextButton(onClick = { onDelete(cb.id) }) {
+                                Text("删除", color = MaterialTheme.colorScheme.error)
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text("完成")
+            }
+        },
+    )
 }
 
 // ==================== 日期选择器弹窗 ====================

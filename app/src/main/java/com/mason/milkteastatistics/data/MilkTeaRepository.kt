@@ -2,7 +2,10 @@ package com.mason.milkteastatistics.data
 
 import kotlinx.coroutines.flow.Flow
 
-class MilkTeaRepository(private val dao: MilkTeaDao) {
+class MilkTeaRepository(
+    private val dao: MilkTeaDao,
+    private val commonBrandDao: CommonBrandDao,
+) {
 
     // ========== CRUD ==========
 
@@ -53,4 +56,16 @@ class MilkTeaRepository(private val dao: MilkTeaDao) {
         end: Long,
         brand: String,
     ): Flow<List<DailySummary>> = dao.getDailyAggregatesByBrand(start, end, brand)
+
+    // ========== 常用品牌 ==========
+
+    fun getCommonBrands(): Flow<List<CommonBrand>> = commonBrandDao.getAll()
+
+    suspend fun addCommonBrand(name: String) {
+        commonBrandDao.insert(CommonBrand(name = name))
+    }
+
+    suspend fun removeCommonBrand(id: Long) {
+        commonBrandDao.deleteById(id)
+    }
 }

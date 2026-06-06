@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import com.mason.milkteastatistics.data.DailyStats
 import com.mason.milkteastatistics.data.DailySummary
 import com.mason.milkteastatistics.data.MilkTeaDatabase
+import com.mason.milkteastatistics.data.CommonBrand
 import com.mason.milkteastatistics.data.MilkTeaRecord
 import com.mason.milkteastatistics.data.MilkTeaRepository
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -29,8 +30,10 @@ enum class DateRange(val label: String) {
 class MilkTeaViewModel(application: Application) : AndroidViewModel(application) {
 
     // 先初始化 repository，后续所有属性初始化都可以引用它
+    private val db = MilkTeaDatabase.getDatabase(application)
     private val repository: MilkTeaRepository = MilkTeaRepository(
-        MilkTeaDatabase.getDatabase(application).milkTeaDao(),
+        db.milkTeaDao(),
+        db.commonBrandDao(),
     )
 
     // ========== 筛选状态 ==========
@@ -45,6 +48,19 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
 
     val allBrands: StateFlow<List<String>> = repository.getAllBrands()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    // ========== 常用品牌 ==========
+
+    val commonBrands: StateFlow<List<CommonBrand>> = repository.getCommonBrands()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    fun addCommonBrand(name: String) {
+        viewModelScope.launch { repository.addCommonBrand(name) }
+    }
+
+    fun removeCommonBrand(id: Long) {
+        viewModelScope.launch { repository.removeCommonBrand(id) }
+    }
 
     // ========== 日期范围计算 ==========
 
