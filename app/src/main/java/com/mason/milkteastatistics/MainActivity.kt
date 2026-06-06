@@ -4,7 +4,7 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import com.mason.milkteastatistics.ui.MilkTeaScreen
+import com.mason.milkteastatistics.ui.navigation.AppNavigation
 import com.mason.milkteastatistics.ui.theme.MilkTeaTheme
 
 class MainActivity : ComponentActivity() {
@@ -13,7 +13,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             MilkTeaTheme {
-                MilkTeaScreen()
+                AppNavigation()
             }
         }
     }
