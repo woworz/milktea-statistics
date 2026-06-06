@@ -10,6 +10,7 @@ data class MilkTeaRecord(
     val id: Long = 0,
     val timestamp: Long,
     val brand: String,
+    val drinkName: String? = null,
     val price: Double,
 )
 

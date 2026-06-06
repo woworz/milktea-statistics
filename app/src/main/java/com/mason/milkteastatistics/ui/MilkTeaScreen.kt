@@ -191,8 +191,8 @@ fun MilkTeaScreen(
         AddEditRecordDialog(
             record = null,
             onDismiss = { showAddDialog = false },
-            onConfirm = { brand, price, timestamp ->
-                viewModel.addRecord(brand, price, timestamp)
+            onConfirm = { brand, drinkName, price, timestamp ->
+                viewModel.addRecord(brand, drinkName, price, timestamp)
                 showAddDialog = false
             },
         )
@@ -203,8 +203,8 @@ fun MilkTeaScreen(
         AddEditRecordDialog(
             record = record,
             onDismiss = { viewModel.cancelEdit() },
-            onConfirm = { brand, price, timestamp ->
-                viewModel.updateRecord(record.copy(brand = brand, price = price, timestamp = timestamp))
+            onConfirm = { brand, drinkName, price, timestamp ->
+                viewModel.updateRecord(record.copy(brand = brand, drinkName = drinkName, price = price, timestamp = timestamp))
                 viewModel.cancelEdit()
             },
         )
@@ -438,6 +438,14 @@ private fun MilkTeaRecordCard(
                         tint = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
+                record.drinkName?.let { name ->
+                    Spacer(Modifier.height(2.dp))
+                    Text(
+                        text = name,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "¥%.2f".format(record.price),
@@ -468,10 +476,11 @@ private fun MilkTeaRecordCard(
 private fun AddEditRecordDialog(
     record: MilkTeaRecord?,
     onDismiss: () -> Unit,
-    onConfirm: (brand: String, price: Double, timestamp: Long) -> Unit,
+    onConfirm: (brand: String, drinkName: String?, price: Double, timestamp: Long) -> Unit,
 ) {
     val isEdit = record != null
     var brand by remember(record) { mutableStateOf(record?.brand ?: "") }
+    var drinkName by remember(record) { mutableStateOf(record?.drinkName ?: "") }
     var price by remember(record) { mutableStateOf(record?.price?.toString() ?: "") }
     var priceError by remember { mutableStateOf(false) }
     var selectedTimestamp by remember(record) {
@@ -494,6 +503,17 @@ private fun AddEditRecordDialog(
                     onValueChange = { brand = it },
                     label = { Text("品牌") },
                     placeholder = { Text("例如：喜茶、奈雪") },
+                    singleLine = true,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                Spacer(Modifier.height(12.dp))
+
+                // 饮品名称（可选）
+                OutlinedTextField(
+                    value = drinkName,
+                    onValueChange = { drinkName = it },
+                    label = { Text("饮品（可选）") },
+                    placeholder = { Text("例如：柠檬水、珍珠奶茶") },
                     singleLine = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
@@ -556,7 +576,12 @@ private fun AddEditRecordDialog(
                 onClick = {
                     val priceValue = price.toDoubleOrNull()
                     if (brand.isNotBlank() && priceValue != null && priceValue >= 0) {
-                        onConfirm(brand.trim(), priceValue, selectedTimestamp)
+                        onConfirm(
+                            brand.trim(),
+                            drinkName.trim().ifBlank { null },
+                            priceValue,
+                            selectedTimestamp,
+                        )
                     } else {
                         priceError = true
                     }

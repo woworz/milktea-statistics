@@ -5,7 +5,7 @@ import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
 
-@Database(entities = [MilkTeaRecord::class], version = 1, exportSchema = false)
+@Database(entities = [MilkTeaRecord::class], version = 2, exportSchema = false)
 abstract class MilkTeaDatabase : RoomDatabase() {
 
     abstract fun milkTeaDao(): MilkTeaDao
@@ -20,7 +20,8 @@ abstract class MilkTeaDatabase : RoomDatabase() {
                     context.applicationContext,
                     MilkTeaDatabase::class.java,
                     "milk_tea_database",
-                ).build()
+                ).fallbackToDestructiveMigration(dropAllTables = true)
+                    .build()
                 INSTANCE = instance
                 instance
             }
