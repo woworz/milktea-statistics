@@ -1,5 +1,7 @@
 package com.mason.milkteastatistics.ui
 
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -12,20 +14,30 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.SegmentedButton
+import androidx.compose.material3.SegmentedButtonDefaults
+import androidx.compose.material3.SingleChoiceSegmentedButtonRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -42,6 +54,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import com.mason.milkteastatistics.data.DailyStats
 import com.mason.milkteastatistics.data.MilkTeaRecord
 import java.text.SimpleDateFormat
 import java.util.Date
@@ -53,8 +66,17 @@ fun MilkTeaScreen(
     viewModel: MilkTeaViewModel = viewModel(),
 ) {
     val todayCount by viewModel.todayCount.collectAsStateWithLifecycle()
-    val todayRecords by viewModel.todayRecords.collectAsStateWithLifecycle()
+    val selectedDateRange by viewModel.selectedDateRange.collectAsStateWithLifecycle()
+    val selectedBrand by viewModel.selectedBrand.collectAsStateWithLifecycle()
+    val allBrands by viewModel.allBrands.collectAsStateWithLifecycle()
+    val stats by viewModel.stats.collectAsStateWithLifecycle()
+    val filteredRecords by viewModel.filteredRecords.collectAsStateWithLifecycle()
+    val dailyAggregates by viewModel.dailyAggregates.collectAsStateWithLifecycle()
+    val editingRecord by viewModel.editingRecord.collectAsStateWithLifecycle()
+
     var showAddDialog by remember { mutableStateOf(false) }
+    var chartMetric by remember { mutableStateOf(ChartMetric.COUNT) }
+    var useLineChart by remember { mutableStateOf(false) }
 
     Scaffold(
         topBar = {
@@ -83,40 +105,85 @@ fun MilkTeaScreen(
             }
         },
     ) { padding ->
-        if (todayRecords.isEmpty()) {
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding),
-                contentAlignment = Alignment.Center,
-            ) {
-                Text(
-                    text = "今天还没喝奶茶 ☕\n点击 + 添加记录",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(padding)
+                .padding(horizontal = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
+            // 日期范围 + 品牌筛选
+            item {
+                FilterSection(
+                    selectedRange = selectedDateRange,
+                    onRangeSelected = { viewModel.setDateRange(it) },
+                    selectedBrand = selectedBrand,
+                    allBrands = allBrands,
+                    onBrandSelected = { viewModel.setBrandFilter(it) },
                 )
             }
-        } else {
-            LazyColumn(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(padding)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(8.dp),
-            ) {
-                item { Spacer(Modifier.height(8.dp)) }
-                items(todayRecords, key = { it.id }) { record ->
+
+            // 统计卡片
+            item {
+                StatsCards(stats = stats)
+            }
+
+            // 图表
+            item {
+                ChartSection(
+                    dailyData = dailyAggregates,
+                    metric = chartMetric,
+                    onMetricChange = { chartMetric = it },
+                    useLineChart = useLineChart,
+                    onChartTypeChange = { useLineChart = it },
+                )
+            }
+
+            // 记录列表标题
+            item {
+                Text(
+                    text = if (selectedBrand != null) "$selectedBrand 的记录" else "全部记录",
+                    style = MaterialTheme.typography.titleMedium,
+                    fontWeight = FontWeight.Bold,
+                    modifier = Modifier.padding(top = 4.dp),
+                )
+            }
+
+            // 列表
+            if (filteredRecords.isEmpty()) {
+                item {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(vertical = 48.dp),
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Text(
+                            text = "暂无记录\n点击 + 添加",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+            } else {
+                items(filteredRecords, key = { it.id }) { record ->
                     MilkTeaRecordCard(
                         record = record,
+                        onEdit = { viewModel.startEdit(record) },
                         onDelete = { viewModel.deleteRecord(record) },
                     )
                 }
             }
+
+            // 底部留白
+            item { Spacer(Modifier.height(80.dp)) }
         }
     }
 
+    // 添加弹窗
     if (showAddDialog) {
-        AddRecordDialog(
+        AddEditRecordDialog(
+            record = null,
             onDismiss = { showAddDialog = false },
             onConfirm = { brand, price ->
                 viewModel.addRecord(brand, price)
@@ -124,17 +191,223 @@ fun MilkTeaScreen(
             },
         )
     }
+
+    // 编辑弹窗
+    editingRecord?.let { record ->
+        AddEditRecordDialog(
+            record = record,
+            onDismiss = { viewModel.cancelEdit() },
+            onConfirm = { brand, price ->
+                viewModel.updateRecord(record.copy(brand = brand, price = price))
+                viewModel.cancelEdit()
+            },
+        )
+    }
 }
+
+// ==================== 筛选栏 ====================
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun FilterSection(
+    selectedRange: DateRange,
+    onRangeSelected: (DateRange) -> Unit,
+    selectedBrand: String?,
+    allBrands: List<String>,
+    onBrandSelected: (String?) -> Unit,
+) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        // 日期范围
+        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            DateRange.entries.forEach { range ->
+                SegmentedButton(
+                    selected = selectedRange == range,
+                    onClick = { onRangeSelected(range) },
+                    shape = SegmentedButtonDefaults.itemShape(
+                        index = DateRange.entries.indexOf(range),
+                        count = DateRange.entries.size,
+                    ),
+                ) {
+                    Text(range.label)
+                }
+            }
+        }
+
+        // 品牌筛选
+        var expanded by remember { mutableStateOf(false) }
+        val displayText = selectedBrand ?: "全部品牌"
+
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = it },
+        ) {
+            OutlinedTextField(
+                value = displayText,
+                onValueChange = {},
+                readOnly = true,
+                label = { Text("品牌") },
+                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .menuAnchor(),
+                singleLine = true,
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false },
+            ) {
+                DropdownMenuItem(
+                    text = { Text("全部品牌") },
+                    onClick = {
+                        onBrandSelected(null)
+                        expanded = false
+                    },
+                )
+                allBrands.forEach { brand ->
+                    DropdownMenuItem(
+                        text = { Text(brand) },
+                        onClick = {
+                            onBrandSelected(brand)
+                            expanded = false
+                        },
+                    )
+                }
+            }
+        }
+    }
+}
+
+// ==================== 统计卡片 ====================
+
+@Composable
+private fun StatsCards(stats: DailyStats) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(8.dp),
+    ) {
+        StatCard(
+            label = "总花费",
+            value = "¥%.1f".format(stats.totalSpend),
+            modifier = Modifier.weight(1f),
+        )
+        StatCard(
+            label = "杯数",
+            value = "${stats.totalCount}",
+            modifier = Modifier.weight(1f),
+        )
+        StatCard(
+            label = "均价",
+            value = "¥%.1f".format(stats.avgPrice),
+            modifier = Modifier.weight(1f),
+        )
+    }
+}
+
+@Composable
+private fun StatCard(
+    label: String,
+    value: String,
+    modifier: Modifier = Modifier,
+) {
+    OutlinedCard(modifier = modifier) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+        ) {
+            Text(
+                text = value,
+                style = MaterialTheme.typography.titleLarge,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.primary,
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        }
+    }
+}
+
+// ==================== 图表区 ====================
+
+@Composable
+private fun ChartSection(
+    dailyData: List<com.mason.milkteastatistics.data.DailySummary>,
+    metric: ChartMetric,
+    onMetricChange: (ChartMetric) -> Unit,
+    useLineChart: Boolean,
+    onChartTypeChange: (Boolean) -> Unit,
+) {
+    if (dailyData.isEmpty()) return
+
+    OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            // 切换栏
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    ChartMetric.entries.forEach { m ->
+                        FilterChip(
+                            selected = metric == m,
+                            onClick = { onMetricChange(m) },
+                            label = { Text(m.label, style = MaterialTheme.typography.labelSmall) },
+                        )
+                    }
+                }
+                Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                    FilterChip(
+                        selected = !useLineChart,
+                        onClick = { onChartTypeChange(false) },
+                        label = { Text("柱状", style = MaterialTheme.typography.labelSmall) },
+                    )
+                    FilterChip(
+                        selected = useLineChart,
+                        onClick = { onChartTypeChange(true) },
+                        label = { Text("折线", style = MaterialTheme.typography.labelSmall) },
+                    )
+                }
+            }
+
+            Spacer(Modifier.height(8.dp))
+
+            // 图表
+            if (useLineChart) {
+                TrendLineChart(
+                    dailyData = dailyData,
+                    metric = metric,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            } else {
+                TrendChart(
+                    dailyData = dailyData,
+                    metric = metric,
+                    modifier = Modifier.fillMaxWidth(),
+                )
+            }
+        }
+    }
+}
+
+// ==================== 记录卡片 ====================
 
 @Composable
 private fun MilkTeaRecordCard(
     record: MilkTeaRecord,
+    onEdit: () -> Unit,
     onDelete: () -> Unit,
 ) {
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
     Card(
-        modifier = Modifier.fillMaxWidth(),
+        modifier = Modifier
+            .fillMaxWidth()
+            .clickable(onClick = onEdit),
         elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
     ) {
         Row(
@@ -145,11 +418,20 @@ private fun MilkTeaRecordCard(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = record.brand,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Text(
+                        text = record.brand,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.Bold,
+                    )
+                    Spacer(Modifier.width(8.dp))
+                    Icon(
+                        Icons.Default.Edit,
+                        contentDescription = "编辑",
+                        modifier = Modifier.padding(2.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "¥%.2f".format(record.price),
@@ -173,18 +455,22 @@ private fun MilkTeaRecordCard(
     }
 }
 
+// ==================== 添加/编辑弹窗 ====================
+
 @Composable
-private fun AddRecordDialog(
+private fun AddEditRecordDialog(
+    record: MilkTeaRecord?,
     onDismiss: () -> Unit,
     onConfirm: (brand: String, price: Double) -> Unit,
 ) {
-    var brand by remember { mutableStateOf("") }
-    var price by remember { mutableStateOf("") }
+    val isEdit = record != null
+    var brand by remember(record) { mutableStateOf(record?.brand ?: "") }
+    var price by remember(record) { mutableStateOf(record?.price?.toString() ?: "") }
     var priceError by remember { mutableStateOf(false) }
 
     AlertDialog(
         onDismissRequest = onDismiss,
-        title = { Text("添加奶茶记录") },
+        title = { Text(if (isEdit) "编辑记录" else "添加奶茶记录") },
         text = {
             Column {
                 OutlinedTextField(
@@ -225,7 +511,7 @@ private fun AddRecordDialog(
                     }
                 },
             ) {
-                Text("添加")
+                Text(if (isEdit) "保存" else "添加")
             }
         },
         dismissButton = {
