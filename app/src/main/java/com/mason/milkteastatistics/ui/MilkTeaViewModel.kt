@@ -15,6 +15,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
@@ -27,7 +28,10 @@ enum class DateRange(val label: String) {
 
 class MilkTeaViewModel(application: Application) : AndroidViewModel(application) {
 
-    private val repository: MilkTeaRepository
+    // 先初始化 repository，后续所有属性初始化都可以引用它
+    private val repository: MilkTeaRepository = MilkTeaRepository(
+        MilkTeaDatabase.getDatabase(application).milkTeaDao(),
+    )
 
     // ========== 筛选状态 ==========
 
@@ -45,7 +49,7 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
     // ========== 日期范围计算 ==========
 
     private val dateRangeMillis: StateFlow<Pair<Long, Long>> = _selectedDateRange
-        .combine(Unit) { range, _ -> range.toMillis() }
+        .map { it.toMillis() }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
@@ -99,8 +103,13 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
 
     // ========== 今日统计（顶部保留） ==========
 
-    val todayCount: StateFlow<Int>
-    val todayRecords: StateFlow<List<MilkTeaRecord>>
+    private val todayStart = getStartOfToday()
+
+    val todayCount: StateFlow<Int> = repository.getCountForDay(todayStart, todayStart + 86_400_000L)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
+
+    val todayRecords: StateFlow<List<MilkTeaRecord>> = repository.getRecordsForDay(todayStart, todayStart + 86_400_000L)
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // ========== 筛选范围内的统计 ==========
 
@@ -136,20 +145,6 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
 
     private val _editingRecord = MutableStateFlow<MilkTeaRecord?>(null)
     val editingRecord: StateFlow<MilkTeaRecord?> = _editingRecord.asStateFlow()
-
-    init {
-        val dao = MilkTeaDatabase.getDatabase(application).milkTeaDao()
-        repository = MilkTeaRepository(dao)
-
-        val todayStart = getStartOfToday()
-        val todayEnd = todayStart + 86_400_000L
-
-        todayCount = repository.getCountForDay(todayStart, todayEnd)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
-
-        todayRecords = repository.getRecordsForDay(todayStart, todayEnd)
-            .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
-    }
 
     // ========== 操作 ==========
 
