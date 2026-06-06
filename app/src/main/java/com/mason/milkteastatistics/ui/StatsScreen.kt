@@ -9,7 +9,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
@@ -17,7 +20,6 @@ import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
@@ -162,7 +164,16 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
 
             // 图表
             if (dailyAggregates.isNotEmpty()) {
-                OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 4.dp,
+                    ),
+                ) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         if (useLineChart) {
                             TrendLineChart(
@@ -180,7 +191,16 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
                     }
                 }
             } else {
-                OutlinedCard(modifier = Modifier.fillMaxWidth()) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = RoundedCornerShape(16.dp),
+                    colors = CardDefaults.cardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                    ),
+                    elevation = CardDefaults.cardElevation(
+                        defaultElevation = 2.dp,
+                    ),
+                ) {
                     Text(
                         text = "该时间段暂无数据",
                         modifier = Modifier.padding(24.dp),
@@ -224,7 +244,16 @@ private fun StatItem(
     value: String,
     modifier: Modifier = Modifier,
 ) {
-    OutlinedCard(modifier = modifier) {
+    Card(
+        modifier = modifier,
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surface,
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp,
+        ),
+    ) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()

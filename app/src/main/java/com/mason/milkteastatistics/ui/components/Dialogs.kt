@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
@@ -147,6 +148,7 @@ fun AddEditRecordDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clickable { showDatePicker = true },
+                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Text(
                             text = dateFormat.format(Date(selectedTimestamp)),
@@ -158,6 +160,7 @@ fun AddEditRecordDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clickable { showTimePicker = true },
+                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Text(
                             text = timeFormat.format(Date(selectedTimestamp)),
