@@ -149,6 +149,9 @@ fun HomeScreen(viewModel: MilkTeaViewModel) {
     if (showAddDialog) {
         AddEditRecordDialog(
             record = null,
+            commonBrands = commonBrands,
+            onAddCommonBrand = { viewModel.addCommonBrand(it) },
+            onRemoveCommonBrand = { viewModel.removeCommonBrand(it) },
             onDismiss = { showAddDialog = false },
             onConfirm = { brand, drinkName, price, timestamp ->
                 viewModel.addRecord(brand, drinkName, price, timestamp)

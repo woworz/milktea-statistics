@@ -141,6 +141,9 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
     if (showAddDialog) {
         AddEditRecordDialog(
             record = null,
+            commonBrands = commonBrands,
+            onAddCommonBrand = { viewModel.addCommonBrand(it) },
+            onRemoveCommonBrand = { viewModel.removeCommonBrand(it) },
             onDismiss = { showAddDialog = false },
             onConfirm = { brand, drinkName, price, timestamp ->
                 viewModel.addRecord(brand, drinkName, price, timestamp)
@@ -152,6 +155,9 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
     editingRecord?.let { record ->
         AddEditRecordDialog(
             record = record,
+            commonBrands = commonBrands,
+            onAddCommonBrand = { viewModel.addCommonBrand(it) },
+            onRemoveCommonBrand = { viewModel.removeCommonBrand(it) },
             onDismiss = { viewModel.cancelEdit() },
             onConfirm = { brand, drinkName, price, timestamp ->
                 viewModel.updateRecord(
