@@ -11,26 +11,22 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.FilterChip
 import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -72,12 +68,12 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
                 title = {
                     Text(
                         text = "记录",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             )
         },
@@ -85,6 +81,7 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
             FloatingActionButton(
                 onClick = { showAddDialog = true },
                 containerColor = MaterialTheme.colorScheme.primary,
+                modifier = Modifier.size(48.dp),
             ) {
                 Icon(Icons.Default.Add, contentDescription = "添加记录")
             }
@@ -95,7 +92,7 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
                 .fillMaxSize()
                 .padding(padding)
                 .padding(horizontal = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             // 筛选
             item {
@@ -105,14 +102,6 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
                     selectedBrand = selectedBrand,
                     allBrands = allBrands,
                     onBrandSelected = { viewModel.setBrandFilter(it) },
-                )
-            }
-
-            item {
-                Text(
-                    text = if (selectedBrand != null) "$selectedBrand 的记录" else "全部记录",
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.Bold,
                 )
             }
 
@@ -187,7 +176,7 @@ private fun RecordsFilterSection(
     allBrands: List<String>,
     onBrandSelected: (String?) -> Unit,
 ) {
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
             DateRange.entries.forEach { range ->
                 SegmentedButton(
@@ -203,44 +192,21 @@ private fun RecordsFilterSection(
             }
         }
 
-        var expanded by remember { mutableStateOf(false) }
-        val displayText = selectedBrand ?: "全部品牌"
-
-        ExposedDropdownMenuBox(
-            expanded = expanded,
-            onExpandedChange = { expanded = it },
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            OutlinedTextField(
-                value = displayText,
-                onValueChange = {},
-                readOnly = true,
-                label = { Text("品牌") },
-                trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true),
-                singleLine = true,
+            FilterChip(
+                selected = selectedBrand == null,
+                onClick = { onBrandSelected(null) },
+                label = { Text("全部品牌", style = MaterialTheme.typography.labelSmall) },
             )
-            ExposedDropdownMenu(
-                expanded = expanded,
-                onDismissRequest = { expanded = false },
-            ) {
-                DropdownMenuItem(
-                    text = { Text("全部品牌") },
-                    onClick = {
-                        onBrandSelected(null)
-                        expanded = false
-                    },
+            allBrands.forEach { brand ->
+                FilterChip(
+                    selected = selectedBrand == brand,
+                    onClick = { onBrandSelected(brand) },
+                    label = { Text(brand, style = MaterialTheme.typography.labelSmall) },
                 )
-                allBrands.forEach { brand ->
-                    DropdownMenuItem(
-                        text = { Text(brand) },
-                        onClick = {
-                            onBrandSelected(brand)
-                            expanded = false
-                        },
-                    )
-                }
             }
         }
     }
@@ -260,29 +226,32 @@ private fun RecordCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onEdit),
-        shape = RoundedCornerShape(16.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 2.dp),
+        shape = RoundedCornerShape(12.dp),
+        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
+                .padding(horizontal = 16.dp, vertical = 12.dp),
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Column(modifier = Modifier.weight(1f)) {
-                Row(verticalAlignment = Alignment.CenterVertically) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    modifier = Modifier.fillMaxWidth(),
+                ) {
                     Text(
                         text = record.brand,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.titleSmall,
                         fontWeight = FontWeight.Bold,
                     )
-                    Spacer(Modifier.width(8.dp))
-                    Icon(
-                        Icons.Default.Edit,
-                        contentDescription = "编辑",
-                        modifier = Modifier.padding(2.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    Text(
+                        text = "¥%.2f".format(record.price),
+                        style = MaterialTheme.typography.titleSmall,
+                        fontWeight = FontWeight.Bold,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 record.drinkName?.let { name ->
@@ -293,12 +262,7 @@ private fun RecordCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "¥%.2f".format(record.price),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                )
+                Spacer(Modifier.height(2.dp))
                 Text(
                     text = dateFormat.format(Date(record.timestamp)),
                     style = MaterialTheme.typography.bodySmall,
@@ -309,7 +273,7 @@ private fun RecordCard(
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "删除",
-                    tint = MaterialTheme.colorScheme.error,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

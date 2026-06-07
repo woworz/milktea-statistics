@@ -1,6 +1,7 @@
 package com.mason.milkteastatistics.ui
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,8 +10,14 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -25,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 
@@ -41,12 +47,12 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
                 title = {
                     Text(
                         text = "设置",
-                        style = MaterialTheme.typography.titleLarge,
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             )
         },
@@ -55,15 +61,17 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(16.dp)
+                .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
         ) {
+            Spacer(Modifier.height(16.dp))
+
             Text(
                 text = "常用品牌",
                 style = MaterialTheme.typography.titleMedium,
-                fontWeight = FontWeight.Bold,
             )
-            Spacer(Modifier.height(8.dp))
+
+            Spacer(Modifier.height(16.dp))
 
             // 添加
             Row(
@@ -76,6 +84,7 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
                     onValueChange = { newBrand = it },
                     placeholder = { Text("输入品牌名称") },
                     singleLine = true,
+                    shape = RoundedCornerShape(12.dp),
                     modifier = Modifier.weight(1f),
                 )
                 TextButton(
@@ -95,17 +104,24 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
 
             // 列表
             if (commonBrands.isEmpty()) {
-                Text(
-                    text = "还没有常用品牌\n在上方输入框中添加",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 48.dp),
+                    contentAlignment = Alignment.Center,
+                ) {
+                    Text(
+                        text = "还没有常用品牌",
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    )
+                }
             } else {
-                commonBrands.forEach { cb ->
+                commonBrands.forEachIndexed { index, cb ->
                     Row(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .padding(vertical = 8.dp),
+                            .padding(vertical = 12.dp),
                         horizontalArrangement = Arrangement.SpaceBetween,
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
@@ -114,15 +130,24 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
                             style = MaterialTheme.typography.bodyLarge,
                             modifier = Modifier.weight(1f),
                         )
-                        TextButton(onClick = { viewModel.removeCommonBrand(cb.id) }) {
-                            Text(
-                                "删除",
-                                color = MaterialTheme.colorScheme.error,
+                        IconButton(onClick = { viewModel.removeCommonBrand(cb.id) }) {
+                            Icon(
+                                Icons.Default.Delete,
+                                contentDescription = "删除",
+                                tint = MaterialTheme.colorScheme.error,
                             )
                         }
                     }
+                    if (index < commonBrands.lastIndex) {
+                        HorizontalDivider(
+                            thickness = 1.dp,
+                            color = MaterialTheme.colorScheme.outlineVariant,
+                        )
+                    }
                 }
             }
+
+            Spacer(Modifier.height(16.dp))
         }
     }
 }

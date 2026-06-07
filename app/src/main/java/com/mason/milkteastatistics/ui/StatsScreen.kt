@@ -9,19 +9,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyRow
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.ExposedDropdownMenuBox
-import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SegmentedButton
 import androidx.compose.material3.SegmentedButtonDefaults
@@ -58,13 +56,13 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
             TopAppBar(
                 title = {
                     Text(
-                        text = "消费统计",
-                        style = MaterialTheme.typography.titleLarge,
+                        text = "统计",
+                        style = MaterialTheme.typography.titleMedium,
                     )
                 },
                 colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.primaryContainer,
-                    titleContentColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                    containerColor = MaterialTheme.colorScheme.surface,
+                    titleContentColor = MaterialTheme.colorScheme.onSurface,
                 ),
             )
         },
@@ -75,9 +73,9 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
                 .padding(padding)
                 .padding(horizontal = 16.dp)
                 .verticalScroll(rememberScrollState()),
-            verticalArrangement = Arrangement.spacedBy(12.dp),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Spacer(Modifier.height(4.dp))
+            Spacer(Modifier.height(0.dp))
 
             // 日期范围
             SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
@@ -90,49 +88,35 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
                             count = DateRange.entries.size,
                         ),
                     ) {
-                        Text(range.label)
+                        Text(
+                            text = range.label,
+                            style = MaterialTheme.typography.labelMedium,
+                        )
                     }
                 }
             }
 
-            // 品牌筛选
-            var expanded by remember { mutableStateOf(false) }
-            val displayText = selectedBrand ?: "全部品牌"
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = it },
+            // 品牌筛选 - FilterChip row
+            LazyRow(
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                OutlinedTextField(
-                    value = displayText,
-                    onValueChange = {},
-                    readOnly = true,
-                    label = { Text("品牌") },
-                    trailingIcon = { ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded) },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .menuAnchor(type = MenuAnchorType.PrimaryNotEditable, enabled = true),
-                    singleLine = true,
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false },
-                ) {
-                    DropdownMenuItem(
-                        text = { Text("全部品牌") },
-                        onClick = {
-                            viewModel.setBrandFilter(null)
-                            expanded = false
-                        },
+                item {
+                    FilterChip(
+                        selected = selectedBrand == null,
+                        onClick = { viewModel.setBrandFilter(null) },
+                        label = { Text("全部") },
                     )
-                    allBrands.forEach { brand ->
-                        DropdownMenuItem(
-                            text = { Text(brand) },
-                            onClick = {
-                                viewModel.setBrandFilter(brand)
-                                expanded = false
-                            },
-                        )
-                    }
+                }
+                items(allBrands) { brand ->
+                    FilterChip(
+                        selected = selectedBrand == brand,
+                        onClick = { viewModel.setBrandFilter(brand) },
+                        label = { Text(brand) },
+                        colors = FilterChipDefaults.filterChipColors(
+                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
+                        ),
+                    )
                 }
             }
 
@@ -172,12 +156,12 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
             if (dailyAggregates.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                     ),
                     elevation = CardDefaults.cardElevation(
-                        defaultElevation = 4.dp,
+                        defaultElevation = 1.dp,
                     ),
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
@@ -199,12 +183,12 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
             } else {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(16.dp),
+                    shape = RoundedCornerShape(12.dp),
                     colors = CardDefaults.cardColors(
                         containerColor = MaterialTheme.colorScheme.surface,
                     ),
                     elevation = CardDefaults.cardElevation(
-                        defaultElevation = 2.dp,
+                        defaultElevation = 1.dp,
                     ),
                 ) {
                     Text(
@@ -252,12 +236,12 @@ private fun StatItem(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(16.dp),
+        shape = RoundedCornerShape(12.dp),
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surface,
         ),
         elevation = CardDefaults.cardElevation(
-            defaultElevation = 2.dp,
+            defaultElevation = 1.dp,
         ),
     ) {
         Column(
@@ -268,7 +252,7 @@ private fun StatItem(
         ) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary,
             )
