@@ -204,31 +204,26 @@
 
 **路径**: `app/src/main/java/com/mason/milkteastatistics/ui/theme/Theme.kt`
 
-### 7.1 颜色定义
-
-| 颜色常量 | 行号 | 色值 | 用途 |
-|---|---|---|---|
-| `MilkTeaBrown` | 第 16 行 | `#D4A574` | Primary - 奶茶棕 |
-| `CreamWhite` | 第 17 行 | `#FFFFF8E7` | Background - 奶油白 |
-| `MatchaGreen` | 第 18 行 | `#8FBC8F` | Secondary - 抹茶绿 |
-| `MilkTeaBrownDark` | 第 21 行 | `#B8956A` | Primary 深色变体 |
-| `MilkTeaBrownLight` | 第 22 行 | `#E8C9A8` | Primary Container |
-| `DarkBackground` | 第 27 行 | `#1A1410` | 深色模式背景 |
-| `DarkSurface` | 第 28 行 | `#2D2520` | 深色模式 Surface |
-
-### 7.2 Composable 函数
+### 7.1 Composable 函数
 
 | 函数 | 行号 | 说明 |
 |---|---|---|
-| `MilkTeaTheme(darkTheme, dynamicColor, content)` | **第 111-129 行** | 应用主题包装器 |
+| `MilkTeaTheme(darkTheme, dynamicColor, content)` | **第 9-29 行** | 应用主题包装器，使用 MiuixTheme |
 
-### 7.3 主题配置
+### 7.2 主题配置
 
-| 配置 | 行号 | 说明 |
-|---|---|---|
-| `LightColorScheme` | 第 32-69 行 | 浅色主题完整配色方案 |
-| `DarkColorScheme` | 第 71-108 行 | 深色主题完整配色方案 |
-| 动态取色逻辑 | 第 116-119 行 | Android 12+ 使用 `dynamicDarkColorScheme` / `dynamicLightColorScheme` |
+| 配置 | 说明 |
+|---|---|
+| `ThemeController` | Miuix 主题控制器，管理颜色方案 |
+| `ColorSchemeMode.MonetSystem` | 默认使用 Monet 动态取色 |
+| `MiuixTheme` | Miuix 主题容器，提供 colors 和 textStyles |
+
+### 7.3 Miuix 组件依赖
+
+在 `build.gradle.kts` 中添加：
+```kotlin
+implementation("top.yukonga.miuix.kmp:miuix:0.8.8")
+```
 
 ---
 

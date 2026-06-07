@@ -9,17 +9,17 @@
 - **统计**：消费数据统计卡片（总花费、杯数、均价），柱状图/折线图趋势展示
 - **设置**：常用品牌快捷标签管理，支持自定义添加和删除
 - **添加记录弹窗**：支持品牌快捷选择、饮品名称、价格输入，可自定义饮用日期和时间
-- **温暖治愈主题**：奶茶棕 + 抹茶绿配色，支持动态取色和深色模式
+- **HyperOS 设计风格**：基于 Miuix 组件库，支持 Monet 动态取色和深色模式
 
 ## 技术栈
 
 | 层级 | 技术 |
 |---|---|
-| UI | Jetpack Compose + Material Design 3 |
+| UI | Jetpack Compose + [Miuix](https://github.com/compose-miuix-ui/miuix) v0.8.8 (HyperOS 设计规范) |
 | 架构 | MVVM (ViewModel + Repository + DAO) |
 | 数据库 | Room (SQLite) + Flow 响应式查询 |
 | 图表 | 自定义 Canvas 绘制（柱状图 + 平滑折线图） |
-| 导航 | Jetpack Navigation Compose |
+| 导航 | Jetpack Navigation Compose + Miuix NavigationBar |
 | 构建 | Gradle + Kotlin DSL + KSP |
 
 ## 项目结构
@@ -46,7 +46,7 @@ app/src/main/java/com/mason/milkteastatistics/
     ├── components/
     │   └── Dialogs.kt              # 添加/编辑弹窗、品牌管理弹窗、日期时间选择器
     └── theme/
-        └── Theme.kt                # 主题配色（温暖治愈风格）
+        └── Theme.kt                # 主题配色（MiuixTheme + ThemeController）
 ```
 
 ## 快速开始

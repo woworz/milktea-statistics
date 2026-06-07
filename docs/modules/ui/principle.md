@@ -342,44 +342,78 @@ val viewModel: MilkTeaViewModel = viewModel(
 
 ## 7. 主题与配色
 
-### 7.1 Material Design 3 ColorScheme
+### 7.1 Miuix HyperOS 设计规范
+
+本项目使用 [Miuix](https://github.com/compose-miuix-ui/miuix) (v0.8.8) 作为 UI 组件库，遵循小米 HyperOS 设计规范。
+
+### 7.2 ThemeController 配置
 
 ```kotlin
-private val LightColorScheme = lightColorScheme(
-    primary = MilkTeaBrown,              // 奶茶棕
-    onPrimary = Color(0xFF4A3728),       // 主色上的文字（深棕）
-    primaryContainer = MilkTeaBrownLight, // 主色容器
-    secondary = MatchaGreen,             // 抹茶绿
-    background = CreamWhite,             // 奶油白背景
-    // ...
-)
-```
-
-### 7.2 动态取色 (Material You)
-
-```kotlin
-val colorScheme = when {
-    dynamicColor && Build.VERSION.SDK_INT >= 31 -> {
-        val context = LocalContext.current
-        if (darkTheme) dynamicDarkColorScheme(context)
-        else dynamicLightColorScheme(context)
-    }
-    darkTheme -> DarkColorScheme
-    else -> LightColorScheme
+@Composable
+fun MilkTeaTheme(
+    darkTheme: Boolean = false,
+    dynamicColor: Boolean = true,
+    content: @Composable () -> Unit,
+) {
+    val controller = ThemeController(
+        colorSchemeMode = if (dynamicColor) {
+            ColorSchemeMode.MonetSystem  // 动态取色
+        } else if (darkTheme) {
+            ColorSchemeMode.Dark
+        } else {
+            ColorSchemeMode.Light
+        }
+    )
+    
+    MiuixTheme(
+        controller = controller,
+        content = content
+    )
 }
 ```
 
-- Android 12+ 支持从系统壁纸提取配色（Material You / Dynamic Color）
-- 优先使用动态取色，回退到预设的温暖治愈配色
-- 深色模式独立定义完整配色方案
+### 7.3 ColorSchemeMode 枚举
 
-### 7.3 温暖治愈风格
+| 模式 | 说明 |
+|---|---|
+| `System` | 跟随系统亮/暗模式 |
+| `Light` | 强制浅色主题 |
+| `Dark` | 强制深色主题 |
+| `MonetSystem` | 动态取色 + 跟随系统亮/暗 |
+| `MonetLight` | 动态取色 + 强制浅色 |
+| `MonetDark` | 动态取色 + 强制深色 |
 
-| Token | Light | Dark | 情感语义 |
-|---|---|---|---|
-| Primary | 奶茶棕 #D4A574 | 浅奶茶 #E8C9A8 | 温暖、亲切 |
-| Secondary | 抹茶绿 #8FBC8F | 浅抹茶 #A8D4A8 | 清新、自然 |
-| Background | 奶油白 #FFFFF8E7 | 深暖黑 #1A1410 | 柔和、舒适 |
+### 7.4 Miuix 组件使用
+
+```kotlin
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.NavigationBar
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.theme.MiuixTheme
+
+// 使用 MiuixTheme 中的颜色和文字样式
+Text(
+    text = "标题",
+    style = MiuixTheme.textStyles.title3,
+    color = MiuixTheme.colorScheme.onSurface,
+)
+```
+
+### 7.5 文字样式 (TextStyles)
+
+| 样式 | 字号 | 用途 |
+|---|---|---|
+| `title1` | 32sp | 大标题 |
+| `title2` | 24sp | 中标题 |
+| `title3` | 20sp | 小标题 |
+| `body1` | 16sp | 正文 |
+| `body2` | 14sp | 次要正文 |
+| `footnote1` | 13sp | 脚注 |
+| `footnote2` | 11sp | 小脚注 |
 
 ## 8. 弹窗设计
 

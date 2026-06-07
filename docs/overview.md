@@ -84,16 +84,17 @@
 
 职责：界面渲染、用户交互、状态订阅。
 
+- **UI 框架**：[Miuix](https://github.com/compose-miuix-ui/miuix) (v0.8.8) — 小米 HyperOS 设计规范的 Compose 组件库
 - **Screen 组件**：`HomeScreen`、`RecordsScreen`、`StatsScreen`、`SettingsScreen`
 - **状态管理**：`MilkTeaViewModel`，持有 `StateFlow` 状态，调度 Service 执行业务逻辑
 - **自定义组件**：`TrendChart`（柱状图）、`TrendLineChart`（折线图）、`AddEditRecordDialog` 等
-- **主题**：`MilkTeaTheme`，温暖治愈配色方案
+- **主题**：`MilkTeaTheme`，基于 `MiuixTheme` + `ThemeController`，支持 Monet 动态取色
 
 ### 2.5 导航模块 (Navigation)
 
 职责：页面路由管理和底部导航栏。
 
-- `AppNavigation.kt`：定义 4 个 Tab 路由，管理 `NavController` 和 `BottomNavigationBar`
+- `AppNavigation.kt`：定义 4 个 Tab 路由，使用 miuix `NavigationBar` 组件管理 `NavController` 和底部导航
 
 ### 2.6 应用入口 (Application Entry)
 
@@ -213,12 +214,12 @@ selectedBrand ──────┘
 
 ### 5.2 主题配色
 
-采用 **温暖治愈风格** 配色：
+采用 **Miuix HyperOS 设计规范**：
 
-- **Primary**：奶茶棕 `#D4A574` — 温暖、亲切
-- **Secondary**：抹茶绿 `#8FBC8F` — 清新、自然
-- **Background**：奶油白 `#FFFFF8E7` — 柔和、舒适
-- 支持 Material You 动态取色（Android 12+）
+- **UI 组件库**：Miuix v0.8.8 (`top.yukonga.miuix.kmp:miuix:0.8.8`)
+- **主题控制器**：`ThemeController`，支持 `ColorSchemeMode.MonetSystem` 动态取色
+- **配色方案**：基于 Monet 动态取色，自动生成温暖治愈风格配色
+- **深色模式**：`ColorSchemeMode.Dark` 自动适配
 
 ### 5.3 图表交互
 
