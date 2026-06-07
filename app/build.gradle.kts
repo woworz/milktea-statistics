@@ -71,4 +71,7 @@ dependencies {
 
     // Navigation
     implementation(libs.androidx.navigation.compose)
+
+    // Startup
+    implementation(libs.androidx.startup.runtime)
 }

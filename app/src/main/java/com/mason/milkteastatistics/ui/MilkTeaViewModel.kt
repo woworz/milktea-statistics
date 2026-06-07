@@ -9,6 +9,10 @@ import com.mason.milkteastatistics.data.MilkTeaDatabase
 import com.mason.milkteastatistics.data.CommonBrand
 import com.mason.milkteastatistics.data.MilkTeaRecord
 import com.mason.milkteastatistics.data.MilkTeaRepository
+import com.mason.milkteastatistics.model.DateRange
+import com.mason.milkteastatistics.service.AnalyticsService
+import com.mason.milkteastatistics.service.BrandService
+import com.mason.milkteastatistics.service.RecordService
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -21,20 +25,20 @@ import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.Calendar
 
-enum class DateRange(val label: String) {
-    THIS_WEEK("本周"),
-    THIS_MONTH("本月"),
-    LAST_MONTH("上月"),
-}
-
 class MilkTeaViewModel(application: Application) : AndroidViewModel(application) {
 
-    // 先初始化 repository，后续所有属性初始化都可以引用它
+    // 依赖层：通过 App Startup 在 Application 启动阶段已完成数据库初始化，
+    // 此处 getDatabase() 仅获取已就绪的单例，无阻塞耗时。
     private val db = MilkTeaDatabase.getDatabase(application)
     private val repository: MilkTeaRepository = MilkTeaRepository(
         db.milkTeaDao(),
         db.commonBrandDao(),
     )
+
+    // 业务服务层
+    private val recordService = RecordService(repository)
+    private val brandService = BrandService(repository)
+    private val analyticsService = AnalyticsService(repository)
 
     // ========== 筛选状态 ==========
 
@@ -46,61 +50,31 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
 
     // ========== 品牌列表 ==========
 
-    val allBrands: StateFlow<List<String>> = repository.getAllBrands()
+    val allBrands: StateFlow<List<String>> = brandService.getAllBrands()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // ========== 常用品牌 ==========
 
-    val commonBrands: StateFlow<List<CommonBrand>> = repository.getCommonBrands()
+    val commonBrands: StateFlow<List<CommonBrand>> = brandService.getCommonBrands()
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun addCommonBrand(name: String) {
-        viewModelScope.launch { repository.addCommonBrand(name) }
+        viewModelScope.launch { brandService.addCommonBrand(name) }
     }
 
     fun removeCommonBrand(id: Long) {
-        viewModelScope.launch { repository.removeCommonBrand(id) }
+        viewModelScope.launch { brandService.removeCommonBrand(id) }
     }
 
     // ========== 日期范围计算 ==========
 
     private val dateRangeMillis: StateFlow<Pair<Long, Long>> = _selectedDateRange
-        .map { it.toMillis() }
+        .map { analyticsService.toMillis(it) }
         .stateIn(
             viewModelScope,
             SharingStarted.WhileSubscribed(5_000),
-            DateRange.THIS_MONTH.toMillis(),
+            analyticsService.toMillis(DateRange.THIS_MONTH),
         )
-
-    private fun DateRange.toMillis(): Pair<Long, Long> {
-        val cal = Calendar.getInstance()
-        cal.set(Calendar.HOUR_OF_DAY, 0)
-        cal.set(Calendar.MINUTE, 0)
-        cal.set(Calendar.SECOND, 0)
-        cal.set(Calendar.MILLISECOND, 0)
-
-        return when (this) {
-            DateRange.THIS_WEEK -> {
-                cal.set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                val start = cal.timeInMillis
-                cal.add(Calendar.DAY_OF_MONTH, 7)
-                start to cal.timeInMillis
-            }
-            DateRange.THIS_MONTH -> {
-                cal.set(Calendar.DAY_OF_MONTH, 1)
-                val start = cal.timeInMillis
-                cal.add(Calendar.MONTH, 1)
-                start to cal.timeInMillis
-            }
-            DateRange.LAST_MONTH -> {
-                cal.set(Calendar.DAY_OF_MONTH, 1)
-                cal.add(Calendar.MONTH, -1)
-                val start = cal.timeInMillis
-                cal.add(Calendar.MONTH, 1)
-                start to cal.timeInMillis
-            }
-        }
-    }
 
     // ========== 筛选后的记录 ==========
 
@@ -109,11 +83,7 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
         .combine(_selectedBrand) { range, brand -> range to brand }
         .flatMapLatest { (range, brand) ->
             val (start, end) = range
-            if (brand != null) {
-                repository.getRecordsByDateRangeAndBrand(start, end, brand)
-            } else {
-                repository.getRecordsByDateRange(start, end)
-            }
+            analyticsService.getFilteredRecords(start, end, brand)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -121,10 +91,10 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
 
     private val todayStart = getStartOfToday()
 
-    val todayCount: StateFlow<Int> = repository.getCountForDay(todayStart, todayStart + 86_400_000L)
+    val todayCount: StateFlow<Int> = recordService.getTodayCount(todayStart, todayStart + 86_400_000L)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
-    val todayRecords: StateFlow<List<MilkTeaRecord>> = repository.getRecordsForDay(todayStart, todayStart + 86_400_000L)
+    val todayRecords: StateFlow<List<MilkTeaRecord>> = recordService.getTodayRecords(todayStart, todayStart + 86_400_000L)
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // ========== 筛选范围内的统计 ==========
@@ -134,11 +104,7 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
         .combine(_selectedBrand) { range, brand -> range to brand }
         .flatMapLatest { (range, brand) ->
             val (start, end) = range
-            if (brand != null) {
-                repository.getStatsByBrand(start, end, brand)
-            } else {
-                repository.getStats(start, end)
-            }
+            analyticsService.getStats(start, end, brand)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), DailyStats())
 
@@ -149,11 +115,7 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
         .combine(_selectedBrand) { range, brand -> range to brand }
         .flatMapLatest { (range, brand) ->
             val (start, end) = range
-            if (brand != null) {
-                repository.getDailyAggregatesByBrand(start, end, brand)
-            } else {
-                repository.getDailyAggregates(start, end)
-            }
+            analyticsService.getDailyAggregates(start, end, brand)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
@@ -171,7 +133,7 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
         timestamp: Long = System.currentTimeMillis(),
     ) {
         viewModelScope.launch {
-            repository.insert(
+            recordService.addRecord(
                 MilkTeaRecord(
                     timestamp = timestamp,
                     brand = brand,
@@ -183,15 +145,11 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
     }
 
     fun updateRecord(record: MilkTeaRecord) {
-        viewModelScope.launch {
-            repository.update(record)
-        }
+        viewModelScope.launch { recordService.updateRecord(record) }
     }
 
     fun deleteRecord(record: MilkTeaRecord) {
-        viewModelScope.launch {
-            repository.delete(record)
-        }
+        viewModelScope.launch { recordService.deleteRecord(record) }
     }
 
     fun setBrandFilter(brand: String?) {
