@@ -11,29 +11,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FloatingActionButton
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -46,11 +28,19 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mason.milkteastatistics.data.MilkTeaRecord
 import com.mason.milkteastatistics.ui.components.AddEditRecordDialog
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.FloatingActionButton
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun RecordsScreen(viewModel: MilkTeaViewModel) {
     val selectedDateRange by viewModel.selectedDateRange.collectAsStateWithLifecycle()
@@ -64,24 +54,13 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "记录",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
+            SmallTopAppBar(
+                title = "记录"
             )
         },
         floatingActionButton = {
             FloatingActionButton(
-                onClick = { showAddDialog = true },
-                containerColor = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.size(48.dp),
+                onClick = { showAddDialog = true }
             ) {
                 Icon(Icons.Default.Add, contentDescription = "添加记录")
             }
@@ -115,8 +94,8 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
                     ) {
                         Text(
                             text = "暂无记录\n点击 + 添加",
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            style = MiuixTheme.textStyles.body1,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                         )
                     }
                 }
@@ -167,7 +146,6 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
 
 // ==================== 筛选栏 ====================
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun RecordsFilterSection(
     selectedRange: DateRange,
@@ -177,36 +155,37 @@ private fun RecordsFilterSection(
     onBrandSelected: (String?) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+        // 日期范围 - 用 Button 替代 SegmentedButton
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
             DateRange.entries.forEach { range ->
-                SegmentedButton(
-                    selected = selectedRange == range,
+                Button(
                     onClick = { onRangeSelected(range) },
-                    shape = SegmentedButtonDefaults.itemShape(
-                        index = DateRange.entries.indexOf(range),
-                        count = DateRange.entries.size,
-                    ),
+                    modifier = Modifier.weight(1f),
                 ) {
                     Text(range.label)
                 }
             }
         }
 
+        // 品牌筛选 - 用 Button 替代 FilterChip
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            FilterChip(
-                selected = selectedBrand == null,
+            Button(
                 onClick = { onBrandSelected(null) },
-                label = { Text("全部品牌", style = MaterialTheme.typography.labelSmall) },
-            )
+            ) {
+                Text("全部品牌", style = MiuixTheme.textStyles.body2)
+            }
             allBrands.forEach { brand ->
-                FilterChip(
-                    selected = selectedBrand == brand,
+                Button(
                     onClick = { onBrandSelected(brand) },
-                    label = { Text(brand, style = MaterialTheme.typography.labelSmall) },
-                )
+                ) {
+                    Text(brand, style = MiuixTheme.textStyles.body2)
+                }
             }
         }
     }
@@ -226,8 +205,6 @@ private fun RecordCard(
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onEdit),
-        shape = RoundedCornerShape(12.dp),
-        elevation = CardDefaults.cardElevation(defaultElevation = 1.dp),
     ) {
         Row(
             modifier = Modifier
@@ -244,36 +221,36 @@ private fun RecordCard(
                 ) {
                     Text(
                         text = record.brand,
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MiuixTheme.textStyles.title3,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
                         text = "¥%.2f".format(record.price),
-                        style = MaterialTheme.typography.titleSmall,
+                        style = MiuixTheme.textStyles.title3,
                         fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.primary,
+                        color = MiuixTheme.colorScheme.primary,
                     )
                 }
                 record.drinkName?.let { name ->
                     Spacer(Modifier.height(2.dp))
                     Text(
                         text = name,
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                 }
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = dateFormat.format(Date(record.timestamp)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "删除",
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
         }

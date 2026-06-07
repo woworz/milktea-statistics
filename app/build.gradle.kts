@@ -74,4 +74,7 @@ dependencies {
 
     // Startup
     implementation(libs.androidx.startup.runtime)
+
+    // Miuix (HyperOS Design)
+    implementation(libs.miuix.ui)
 }

@@ -10,31 +10,31 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
-import androidx.compose.ui.Alignment
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mason.milkteastatistics.data.CommonBrand
 import com.mason.milkteastatistics.data.MilkTeaRecord
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -76,8 +76,8 @@ fun AddEditRecordDialog(
                 if (commonBrands.isNotEmpty()) {
                     Text(
                         text = "常用品牌",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                     Spacer(Modifier.height(6.dp))
                     Row(
@@ -85,62 +85,61 @@ fun AddEditRecordDialog(
                         horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         commonBrands.forEach { cb ->
-                            FilterChip(
-                                selected = brand == cb.name,
+                            Button(
                                 onClick = { brand = if (brand == cb.name) "" else cb.name },
-                                label = { Text(cb.name) },
-                            )
+                            ) {
+                                Text(cb.name)
+                            }
                         }
                         if (onAddCommonBrand != null) {
-                            FilterChip(
-                                selected = false,
+                            Button(
                                 onClick = { showManageBrands = true },
-                                label = { Text("管理", style = MaterialTheme.typography.labelSmall) },
-                            )
+                            ) {
+                                Text("管理", style = MiuixTheme.textStyles.body2)
+                            }
                         }
                     }
                     Spacer(Modifier.height(10.dp))
                 }
 
-                OutlinedTextField(
+                TextField(
                     value = brand,
                     onValueChange = { brand = it },
-                    label = { Text("品牌") },
-                    placeholder = { Text("例如：喜茶、奈雪") },
-                    singleLine = true,
+                    label = "品牌",
+                    useLabelAsPlaceholder = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
+                TextField(
                     value = drinkName,
                     onValueChange = { drinkName = it },
-                    label = { Text("饮品（可选）") },
-                    placeholder = { Text("例如：柠檬水、珍珠奶茶") },
-                    singleLine = true,
+                    label = "饮品（可选）",
+                    useLabelAsPlaceholder = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
                 Spacer(Modifier.height(12.dp))
-                OutlinedTextField(
+                TextField(
                     value = price,
                     onValueChange = {
                         price = it
                         priceError = it.isNotEmpty() && it.toDoubleOrNull() == null
                     },
-                    label = { Text("价格 (¥)") },
-                    placeholder = { Text("例如：25") },
-                    singleLine = true,
-                    keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Decimal),
-                    isError = priceError,
-                    supportingText = if (priceError) {
-                        { Text("请输入有效数字") }
-                    } else null,
+                    label = "价格 (¥)",
+                    useLabelAsPlaceholder = true,
                     modifier = Modifier.fillMaxWidth(),
                 )
+                if (priceError) {
+                    Text(
+                        text = "请输入有效数字",
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.error,
+                    )
+                }
                 Spacer(Modifier.height(12.dp))
                 Text(
                     text = "时间",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
                 Spacer(Modifier.height(4.dp))
                 Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -148,24 +147,22 @@ fun AddEditRecordDialog(
                         modifier = Modifier
                             .weight(1f)
                             .clickable { showDatePicker = true },
-                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Text(
                             text = dateFormat.format(Date(selectedTimestamp)),
                             modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MiuixTheme.textStyles.body2,
                         )
                     }
                     OutlinedCard(
                         modifier = Modifier
                             .weight(1f)
                             .clickable { showTimePicker = true },
-                        shape = RoundedCornerShape(12.dp),
                     ) {
                         Text(
                             text = timeFormat.format(Date(selectedTimestamp)),
                             modifier = Modifier.padding(12.dp),
-                            style = MaterialTheme.typography.bodyMedium,
+                            style = MiuixTheme.textStyles.body2,
                         )
                     }
                 }
@@ -264,14 +261,14 @@ private fun ManageBrandsDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    OutlinedTextField(
+                    TextField(
                         value = newBrand,
                         onValueChange = { newBrand = it },
-                        placeholder = { Text("品牌名称") },
-                        singleLine = true,
+                        label = "品牌名称",
+                        useLabelAsPlaceholder = true,
                         modifier = Modifier.weight(1f),
                     )
-                    TextButton(
+                    Button(
                         onClick = {
                             onAdd(newBrand)
                             newBrand = ""
@@ -285,8 +282,8 @@ private fun ManageBrandsDialog(
                 if (commonBrands.isEmpty()) {
                     Text(
                         text = "还没有常用品牌\n在输入框中添加",
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MiuixTheme.textStyles.body2,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                 } else {
                     commonBrands.forEach { cb ->
@@ -299,11 +296,11 @@ private fun ManageBrandsDialog(
                         ) {
                             Text(
                                 text = cb.name,
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MiuixTheme.textStyles.body2,
                                 modifier = Modifier.weight(1f),
                             )
                             TextButton(onClick = { onDelete(cb.id) }) {
-                                Text("删除", color = MaterialTheme.colorScheme.error)
+                                Text("删除", color = MiuixTheme.colorScheme.error)
                             }
                         }
                     }

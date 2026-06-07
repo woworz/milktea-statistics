@@ -10,21 +10,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.HorizontalDivider
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,8 +22,16 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.basic.TextField
+import top.yukonga.miuix.kmp.basic.IconButton
+import top.yukonga.miuix.kmp.basic.HorizontalDivider
+import top.yukonga.miuix.kmp.basic.Icon
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen(viewModel: MilkTeaViewModel) {
     val commonBrands by viewModel.commonBrands.collectAsStateWithLifecycle()
@@ -43,17 +39,8 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "设置",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
+            SmallTopAppBar(
+                title = "设置"
             )
         },
     ) { padding ->
@@ -68,7 +55,7 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
 
             Text(
                 text = "常用品牌",
-                style = MaterialTheme.typography.titleMedium,
+                style = MiuixTheme.textStyles.title2,
             )
 
             Spacer(Modifier.height(16.dp))
@@ -79,15 +66,14 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                 modifier = Modifier.fillMaxWidth(),
             ) {
-                OutlinedTextField(
+                TextField(
                     value = newBrand,
                     onValueChange = { newBrand = it },
-                    placeholder = { Text("输入品牌名称") },
-                    singleLine = true,
-                    shape = RoundedCornerShape(12.dp),
+                    label = "输入品牌名称",
+                    useLabelAsPlaceholder = true,
                     modifier = Modifier.weight(1f),
                 )
-                TextButton(
+                Button(
                     onClick = {
                         if (newBrand.isNotBlank()) {
                             viewModel.addCommonBrand(newBrand.trim())
@@ -112,8 +98,8 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
                 ) {
                     Text(
                         text = "还没有常用品牌",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        style = MiuixTheme.textStyles.body1,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                 }
             } else {
@@ -127,21 +113,20 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
                     ) {
                         Text(
                             text = cb.name,
-                            style = MaterialTheme.typography.bodyLarge,
+                            style = MiuixTheme.textStyles.body1,
                             modifier = Modifier.weight(1f),
                         )
                         IconButton(onClick = { viewModel.removeCommonBrand(cb.id) }) {
                             Icon(
                                 Icons.Default.Delete,
                                 contentDescription = "删除",
-                                tint = MaterialTheme.colorScheme.error,
+                                tint = MiuixTheme.colorScheme.error,
                             )
                         }
                     }
                     if (index < commonBrands.lastIndex) {
                         HorizontalDivider(
-                            thickness = 1.dp,
-                            color = MaterialTheme.colorScheme.outlineVariant,
+                            color = MiuixTheme.colorScheme.outline,
                         )
                     }
                 }

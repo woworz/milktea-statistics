@@ -6,12 +6,6 @@ import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.Icon
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Text
 import androidx.activity.ComponentActivity
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -28,6 +22,9 @@ import com.mason.milkteastatistics.ui.MilkTeaViewModel
 import com.mason.milkteastatistics.ui.RecordsScreen
 import com.mason.milkteastatistics.ui.SettingsScreen
 import com.mason.milkteastatistics.ui.StatsScreen
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.NavigationBar
+import top.yukonga.miuix.kmp.basic.NavigationBarItem
 
 data class NavDestination(
     val route: String,
@@ -42,7 +39,6 @@ private val destinations = listOf(
     NavDestination("settings", "设置", Icons.Default.Settings),
 )
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppNavigation() {
     val navController = rememberNavController()
@@ -57,8 +53,6 @@ fun AppNavigation() {
                 val currentRoute = navBackStackEntry?.destination?.route
                 destinations.forEach { dest ->
                     NavigationBarItem(
-                        icon = { Icon(dest.icon, contentDescription = dest.label) },
-                        label = { Text(dest.label) },
                         selected = currentRoute == dest.route,
                         onClick = {
                             navController.navigate(dest.route) {
@@ -67,6 +61,8 @@ fun AppNavigation() {
                                 restoreState = true
                             }
                         },
+                        icon = dest.icon,
+                        label = dest.label
                     )
                 }
             }

@@ -12,21 +12,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.Card
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.FilterChip
-import androidx.compose.material3.FilterChipDefaults
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.Scaffold
-import androidx.compose.material3.SegmentedButton
-import androidx.compose.material3.SegmentedButtonDefaults
-import androidx.compose.material3.SingleChoiceSegmentedButtonRow
-import androidx.compose.material3.Text
-import androidx.compose.material3.TopAppBar
-import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -38,8 +24,13 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mason.milkteastatistics.data.DailyStats
+import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.SmallTopAppBar
+import top.yukonga.miuix.kmp.basic.Card
+import top.yukonga.miuix.kmp.basic.Text
+import top.yukonga.miuix.kmp.basic.Button
+import top.yukonga.miuix.kmp.theme.MiuixTheme
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StatsScreen(viewModel: MilkTeaViewModel) {
     val selectedDateRange by viewModel.selectedDateRange.collectAsStateWithLifecycle()
@@ -53,17 +44,8 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        text = "统计",
-                        style = MaterialTheme.typography.titleMedium,
-                    )
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    containerColor = MaterialTheme.colorScheme.surface,
-                    titleContentColor = MaterialTheme.colorScheme.onSurface,
-                ),
+            SmallTopAppBar(
+                title = "统计"
             )
         },
     ) { padding ->
@@ -77,46 +59,41 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
         ) {
             Spacer(Modifier.height(0.dp))
 
-            // 日期范围
-            SingleChoiceSegmentedButtonRow(modifier = Modifier.fillMaxWidth()) {
+            // 日期范围 - 用 Button 替代 SegmentedButton
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
                 DateRange.entries.forEach { range ->
-                    SegmentedButton(
-                        selected = selectedDateRange == range,
+                    Button(
                         onClick = { viewModel.setDateRange(range) },
-                        shape = SegmentedButtonDefaults.itemShape(
-                            index = DateRange.entries.indexOf(range),
-                            count = DateRange.entries.size,
-                        ),
+                        modifier = Modifier.weight(1f),
                     ) {
                         Text(
                             text = range.label,
-                            style = MaterialTheme.typography.labelMedium,
+                            style = MiuixTheme.textStyles.body2,
                         )
                     }
                 }
             }
 
-            // 品牌筛选 - FilterChip row
+            // 品牌筛选 - 用 Button 替代 FilterChip
             LazyRow(
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
-                    FilterChip(
-                        selected = selectedBrand == null,
+                    Button(
                         onClick = { viewModel.setBrandFilter(null) },
-                        label = { Text("全部") },
-                    )
+                    ) {
+                        Text("全部")
+                    }
                 }
                 items(allBrands) { brand ->
-                    FilterChip(
-                        selected = selectedBrand == brand,
+                    Button(
                         onClick = { viewModel.setBrandFilter(brand) },
-                        label = { Text(brand) },
-                        colors = FilterChipDefaults.filterChipColors(
-                            selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
-                            selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer,
-                        ),
-                    )
+                    ) {
+                        Text(brand)
+                    }
                 }
             }
 
@@ -131,24 +108,24 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     ChartMetric.entries.forEach { m ->
-                        FilterChip(
-                            selected = chartMetric == m,
+                        Button(
                             onClick = { chartMetric = m },
-                            label = { Text(m.label, style = MaterialTheme.typography.labelSmall) },
-                        )
+                        ) {
+                            Text(m.label, style = MiuixTheme.textStyles.body2)
+                        }
                     }
                 }
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
-                    FilterChip(
-                        selected = !useLineChart,
+                    Button(
                         onClick = { useLineChart = false },
-                        label = { Text("柱状", style = MaterialTheme.typography.labelSmall) },
-                    )
-                    FilterChip(
-                        selected = useLineChart,
+                    ) {
+                        Text("柱状", style = MiuixTheme.textStyles.body2)
+                    }
+                    Button(
                         onClick = { useLineChart = true },
-                        label = { Text("折线", style = MaterialTheme.typography.labelSmall) },
-                    )
+                    ) {
+                        Text("折线", style = MiuixTheme.textStyles.body2)
+                    }
                 }
             }
 
@@ -156,13 +133,6 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
             if (dailyAggregates.isNotEmpty()) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 1.dp,
-                    ),
                 ) {
                     Column(modifier = Modifier.padding(8.dp)) {
                         if (useLineChart) {
@@ -183,18 +153,11 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
             } else {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
-                    shape = RoundedCornerShape(12.dp),
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                    ),
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 1.dp,
-                    ),
                 ) {
                     Text(
                         text = "该时间段暂无数据",
                         modifier = Modifier.padding(24.dp),
-                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
                 }
             }
@@ -236,13 +199,6 @@ private fun StatItem(
 ) {
     Card(
         modifier = modifier,
-        shape = RoundedCornerShape(12.dp),
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surface,
-        ),
-        elevation = CardDefaults.cardElevation(
-            defaultElevation = 1.dp,
-        ),
     ) {
         Column(
             modifier = Modifier
@@ -252,14 +208,14 @@ private fun StatItem(
         ) {
             Text(
                 text = value,
-                style = MaterialTheme.typography.titleMedium,
+                style = MiuixTheme.textStyles.title3,
                 fontWeight = FontWeight.Bold,
-                color = MaterialTheme.colorScheme.primary,
+                color = MiuixTheme.colorScheme.primary,
             )
             Text(
                 text = label,
-                style = MaterialTheme.typography.bodySmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                style = MiuixTheme.textStyles.body2,
+                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
             )
         }
     }
