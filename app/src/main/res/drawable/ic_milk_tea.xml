@@ -1,0 +1,35 @@
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="24dp"
+    android:height="24dp"
+    android:viewportWidth="24"
+    android:viewportHeight="24"
+    android:tint="?attr/colorPrimary">
+
+    <!-- Cup body with boba cutouts (evenOdd fill) -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:fillType="evenOdd"
+        android:pathData="M5,9.5L15,9.5L13.5,18Q13,20 9.5,20Q6,20 5.5,18Z M6.5,17A1,1 0 1,0 8.5,17A1,1 0 1,0 6.5,17 M8.5,17A1,1 0 1,0 10.5,17A1,1 0 1,0 8.5,17 M10.5,17A1,1 0 1,0 12.5,17A1,1 0 1,0 10.5,17" />
+
+    <!-- Lid -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M3.5,7.5h13v1.5h-13z" />
+
+    <!-- Dome lid -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M5.5,7.5Q5.5,5 10,5Q14.5,5 14.5,7.5Z" />
+
+    <!-- Straw -->
+    <path
+        android:pathData="M11.5,2L13.5,9.5"
+        android:strokeColor="#FFFFFF"
+        android:strokeLineCap="round"
+        android:strokeWidth="1.5" />
+
+    <!-- Bar chart -->
+    <path
+        android:fillColor="#FFFFFF"
+        android:pathData="M16.5,15.5h1.5v4.5h-1.5z M19,12.5h1.5v7.5h-1.5z M21.5,9.5h1.5v10.5h-1.5z" />
+</vector>

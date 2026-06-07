@@ -6,29 +6,29 @@
 
     <!-- Cup body with boba cutouts (evenOdd fill) -->
     <path
-        android:fillColor="#FFFFFF"
+        android:fillColor="#000000"
         android:fillType="evenOdd"
         android:pathData="M28,40L68,40L63,70Q61,78 48,78Q35,78 33,70Z M38,66A3.5,3.5 0 1,0 45,66A3.5,3.5 0 1,0 38,66 M45.5,66A3.5,3.5 0 1,0 52.5,66A3.5,3.5 0 1,0 45.5,66 M53,66A3.5,3.5 0 1,0 60,66A3.5,3.5 0 1,0 53,66" />
 
     <!-- Lid -->
     <path
-        android:fillColor="#FFFFFF"
+        android:fillColor="#000000"
         android:pathData="M22,34h52v5h-52z" />
 
     <!-- Dome lid -->
     <path
-        android:fillColor="#FFFFFF"
+        android:fillColor="#000000"
         android:pathData="M32,34Q32,20 48,20Q64,20 64,34Z" />
 
     <!-- Straw -->
     <path
         android:pathData="M56,14L62,40"
-        android:strokeColor="#FFFFFF"
+        android:strokeColor="#000000"
         android:strokeLineCap="round"
         android:strokeWidth="5" />
 
     <!-- Bar chart -->
     <path
-        android:fillColor="#FFFFFF"
+        android:fillColor="#000000"
         android:pathData="M71,58v20h4v-20z M78,48v30h4v-30z M85,38v40h4v-40z" />
 </vector>
