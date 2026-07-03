@@ -14,6 +14,7 @@
 | `TrendChart.kt` | `ui/TrendChart.kt` | 自定义图表组件（柱状图 + 折线图） |
 | `Theme.kt` | `ui/theme/Theme.kt` | 主题配色方案 |
 | `Dialogs.kt` | `ui/components/Dialogs.kt` | 弹窗组件 |
+| `UiCommon.kt` | `ui/components/UiCommon.kt` | 通用页面标题、空状态、筛选胶囊、指标卡组件 |
 
 ---
 
@@ -99,69 +100,112 @@
 
 ---
 
-## 2. HomeScreen.kt
+## 2. 通用 UI 组件
 
-**路径**: `app/src/main/java/com/mason/milkteastatistics/ui/HomeScreen.kt`
+**路径**: `app/src/main/java/com/mason/milkteastatistics/ui/components/UiCommon.kt`
 
-### 2.1 Composable 函数
+为提升界面一致性，首页、记录、统计、设置页共享以下基础组件：
 
 | 函数 | 行号 | 说明 |
 |---|---|---|
-| `HomeScreen(viewModel)` | **第 57-183 行** | 首页 Screen，展示今日概览和记录 |
-| `GradientStatCard(todaySpend, todayCount)` | 第 186-248 行 | 渐变统计卡片（花费 + 杯数） |
-| `RecentRecordsRow(records)` | 第 250-260 行 | 最近记录横向滚动行 |
-| `RecentRecordCard(record)` | 第 262-310 行 | 最近记录卡片（品牌图标 + 价格 + 时间） |
-| `TodayRecordCard(record, onDelete)` | 第 312-367 行 | 今日记录卡片（可删除） |
-| `relativeTimeLabel(timestamp)` | 第 369-383 行 | 相对时间标签（刚刚 / x分钟前 / x小时前） |
-| `brandEmoji(brand)` | 第 385-392 行 | 根据品牌返回对应 Emoji |
+| `AppTopBar(title, subtitle)` | - | 统一页面顶部标题和说明文案，保留状态栏安全间距 |
+| `EmptyStateCard(...)` | - | 统一空状态卡片，可选主操作按钮 |
+| `FilterPill(label, selected, onClick)` | - | 用于日期范围、品牌、图表指标等筛选项，选中态更清晰 |
+| `SectionHeader(title, trailing)` | - | 区块标题和右侧摘要信息 |
+| `MetricCard(label, value, icon, valueColor)` | - | 首页和统计页共享的数据指标卡 |
 
 ---
 
-## 3. RecordsScreen.kt
+## 3. HomeScreen.kt
 
-**路径**: `app/src/main/java/com/mason/milkteastatistics/ui/RecordsScreen.kt`
+**路径**: `app/src/main/java/com/mason/milkteastatistics/ui/HomeScreen.kt`
 
 ### 3.1 Composable 函数
 
 | 函数 | 行号 | 说明 |
 |---|---|---|
-| `RecordsScreen(viewModel)` | **第 57-176 行** | 记录页 Screen，历史记录列表 + 筛选 |
-| `RecordsFilterSection(...)` | 第 180-246 行 | 筛选栏（日期范围分段按钮 + 品牌下拉框） |
-| `RecordCard(record, onEdit, onDelete)` | 第 250-316 行 | 记录卡片（可点击编辑，可删除） |
+| `HomeScreen(viewModel)` | - | 首页 Screen，展示今日概览、今日记录和添加入口 |
+| `TodayOverview(todaySpend, todayCount)` | - | 两列指标卡，展示今日花费和今日杯数 |
+| `TodayRecordCard(record)` | - | 今日记录卡片，突出品牌、价格、饮品名和时间 |
+| `recentSummary(record)` | - | 生成最近一条记录的摘要文本 |
+
+### 3.2 交互与视觉调整
+
+- 顶部标题改为「今日奶茶」，副标题说明核心操作，降低用户理解成本。
+- 今日花费和杯数改为 `MetricCard`，让关键数据在第一屏可快速扫读。
+- 空状态使用 `EmptyStateCard`，并提供「添加记录」操作，减少用户寻找入口的时间。
+- 今日记录卡片增加内部间距和信息分层，未填写饮品时显示「未填写饮品」而不是留白。
 
 ---
 
-## 4. StatsScreen.kt
+## 4. RecordsScreen.kt
+
+**路径**: `app/src/main/java/com/mason/milkteastatistics/ui/RecordsScreen.kt`
+
+### 4.1 Composable 函数
+
+| 函数 | 行号 | 说明 |
+|---|---|---|
+| `RecordsScreen(viewModel)` | - | 记录页 Screen，历史记录列表 + 筛选 + 添加/编辑弹窗 |
+| `RecordsFilterSection(...)` | - | 日期范围和品牌筛选区，使用 `FilterPill` 表达选中态 |
+| `RecordCard(record, onEdit, onDelete)` | - | 记录卡片，可点击编辑，删除前会弹出确认 |
+
+### 4.2 交互与视觉调整
+
+- 页面顶部说明「按时间和品牌筛选，点击卡片可编辑」，让编辑入口更符合直觉。
+- 日期范围与品牌筛选改为胶囊控件，选中态通过背景、边框、文字权重共同表达。
+- 列表上方增加记录数量摘要。
+- 删除操作由直接删除改为二次确认，避免误触导致数据丢失。
+- 空状态提供添加记录入口，同时提示可切换筛选条件。
+
+---
+
+## 5. StatsScreen.kt
 
 **路径**: `app/src/main/java/com/mason/milkteastatistics/ui/StatsScreen.kt`
 
-### 4.1 枚举类
+### 5.1 枚举类
 
 | 类/函数 | 行号 | 说明 |
 |---|---|---|
 | `ChartMetric` enum | **第 40-43 行** | 图表指标枚举：`COUNT`("杯数"), `SPEND`("金额") |
 
-### 4.2 Composable 函数
+### 5.2 Composable 函数
 
 | 函数 | 行号 | 说明 |
 |---|---|---|
-| `StatsScreen(viewModel)` | **第 44-220 行** | 统计页 Screen |
-| `StatsRow(stats)` | 第 222-244 行 | 统计卡片行（总花费 / 杯数 / 均价） |
-| `StatItem(label, value, modifier)` | 第 246-281 行 | 单个统计卡片 |
+| `StatsScreen(viewModel)` | - | 统计页 Screen，包含筛选、概览指标、趋势图 |
+| `StatsRow(stats)` | - | 统计卡片组（总花费 / 杯数 / 平均单价） |
+
+### 5.3 交互与视觉调整
+
+- 筛选控件统一使用 `FilterPill`，与记录页保持一致。
+- 统计指标改用 `MetricCard`，第一行展示总花费和杯数，第二行展示平均单价，避免三列在窄屏上拥挤。
+- 图表指标和图表类型拆成两组控件，降低横向挤压。
+- 图表卡片增加标题，明确当前展示的是「每日杯数」还是「每日金额」。
+- 无趋势数据时使用统一空状态，而不是单行提示。
 
 ---
 
-## 5. SettingsScreen.kt
+## 6. SettingsScreen.kt
 
 **路径**: `app/src/main/java/com/mason/milkteastatistics/ui/SettingsScreen.kt`
 
 | 函数 | 行号 | 说明 |
 |---|---|---|
-| `SettingsScreen(viewModel)` | **第 33-128 行** | 设置页 Screen，常用品牌管理 |
+| `SettingsScreen(viewModel)` | - | 设置页 Screen，常用品牌添加与删除 |
+
+### 6.1 交互与视觉调整
+
+- 顶部增加副标题，说明常用品牌会提升添加记录效率。
+- 添加输入区改为卡片分组，和品牌列表形成清晰层级。
+- 品牌列表改为卡片内列表，每项增加「添加记录时可快速选择」说明。
+- 删除图标增加具体 `contentDescription`，便于无障碍读屏识别。
+- 空状态说明常用品牌的价值，而不只是显示「还没有」。
 
 ---
 
-## 6. TrendChart.kt
+## 7. TrendChart.kt
 
 **路径**: `app/src/main/java/com/mason/milkteastatistics/ui/TrendChart.kt`
 
@@ -200,7 +244,7 @@
 
 ---
 
-## 7. Theme.kt
+## 8. Theme.kt
 
 **路径**: `app/src/main/java/com/mason/milkteastatistics/ui/theme/Theme.kt`
 
@@ -227,7 +271,7 @@ implementation("top.yukonga.miuix.kmp:miuix:0.8.8")
 
 ---
 
-## 8. Dialogs.kt
+## 9. Dialogs.kt
 
 **路径**: `app/src/main/java/com/mason/milkteastatistics/ui/components/Dialogs.kt`
 
@@ -260,40 +304,41 @@ implementation("top.yukonga.miuix.kmp:miuix:0.8.8")
 
 | 函数名 | 所在文件 | 行号 | 说明 |
 |---|---|---|---|
-| `AddEditRecordDialog(...)` | `Dialogs.kt` | 47-245 | 添加/编辑记录弹窗 |
+| `AddEditRecordDialog(...)` | `Dialogs.kt` | - | 添加/编辑记录弹窗 |
 | `addCommonBrand(name)` | `MilkTeaViewModel.kt` | 61-63 | 添加常用品牌 |
 | `addRecord(brand, drinkName, price, timestamp)` | `MilkTeaViewModel.kt` | 129-145 | 添加记录 |
 | `AppNavigation()` | `AppNavigation.kt` | 47-86 | 底部导航 + 路由 |
-| `brandEmoji(brand)` | `HomeScreen.kt` | 385-392 | 品牌 Emoji 映射 |
+| `AppTopBar(title, subtitle)` | `UiCommon.kt` | - | 页面顶部标题组件 |
 | `cancelEdit()` | `MilkTeaViewModel.kt` | 167-169 | 取消编辑 |
 | `ChartMetric` enum | `StatsScreen.kt` | 40-43 | 图表指标 |
 | `ChartMetric` enum | `TrendChart.kt` | 40-43 | 图表指标 |
 | `DateRange` enum | `model/DateRange.kt` | 3-7 | 日期范围枚举 |
 | `deleteRecord(record)` | `MilkTeaViewModel.kt` | 151-153 | 删除记录 |
-| `GradientStatCard(todaySpend, todayCount)` | `HomeScreen.kt` | 186-248 | 渐变统计卡片 |
-| `HomeScreen(viewModel)` | `HomeScreen.kt` | 57-183 | 首页 |
+| `EmptyStateCard(...)` | `UiCommon.kt` | - | 统一空状态卡片 |
+| `FilterPill(label, selected, onClick)` | `UiCommon.kt` | - | 统一筛选胶囊 |
+| `HomeScreen(viewModel)` | `HomeScreen.kt` | - | 首页 |
 | `MainActivity.onCreate()` | `MainActivity.kt` | 11-18 | 应用入口 |
 | `ManageBrandsDialog(...)` | `Dialogs.kt` | 250-317 | 品牌管理弹窗 |
+| `MetricCard(label, value, ...)` | `UiCommon.kt` | - | 统一指标卡 |
 | `MilkTeaDatePickerDialog(...)` | `Dialogs.kt` | 323-342 | 日期选择器 |
 | `MilkTeaTheme(darkTheme, dynamicColor, content)` | `Theme.kt` | 111-129 | 主题包装器 |
 | `MilkTeaTimePickerDialog(...)` | `Dialogs.kt` | 348-372 | 时间选择器 |
 | `MilkTeaViewModel(application)` | `MilkTeaViewModel.kt` | 28-179 | ViewModel（服务调度） |
 | `NavDestination` data class | `AppNavigation.kt` | 32-36 | 导航目标数据类 |
-| `RecentRecordCard(record)` | `HomeScreen.kt` | 262-310 | 最近记录卡片 |
-| `RecentRecordsRow(records)` | `HomeScreen.kt` | 250-260 | 最近记录行 |
-| `RecordCard(record, onEdit, onDelete)` | `RecordsScreen.kt` | 250-316 | 记录卡片 |
-| `RecordsFilterSection(...)` | `RecordsScreen.kt` | 180-246 | 筛选栏 |
-| `RecordsScreen(viewModel)` | `RecordsScreen.kt` | 57-176 | 记录页 |
-| `relativeTimeLabel(timestamp)` | `HomeScreen.kt` | 369-383 | 相对时间标签 |
+| `recentSummary(record)` | `HomeScreen.kt` | - | 最近记录摘要 |
+| `RecordCard(record, onEdit, onDelete)` | `RecordsScreen.kt` | - | 记录卡片 |
+| `RecordsFilterSection(...)` | `RecordsScreen.kt` | - | 筛选栏 |
+| `RecordsScreen(viewModel)` | `RecordsScreen.kt` | - | 记录页 |
 | `removeCommonBrand(id)` | `MilkTeaViewModel.kt` | 65-67 | 删除常用品牌 |
+| `SectionHeader(title, trailing)` | `UiCommon.kt` | - | 区块标题组件 |
 | `setBrandFilter(brand)` | `MilkTeaViewModel.kt` | 155-157 | 设置品牌筛选 |
 | `setDateRange(range)` | `MilkTeaViewModel.kt` | 159-161 | 设置日期范围 |
-| `SettingsScreen(viewModel)` | `SettingsScreen.kt` | 33-128 | 设置页 |
+| `SettingsScreen(viewModel)` | `SettingsScreen.kt` | - | 设置页 |
 | `startEdit(record)` | `MilkTeaViewModel.kt` | 163-165 | 开始编辑 |
-| `StatItem(label, value, modifier)` | `StatsScreen.kt` | 246-281 | 统计卡片 |
-| `StatsRow(stats)` | `StatsScreen.kt` | 222-244 | 统计卡片行 |
-| `StatsScreen(viewModel)` | `StatsScreen.kt` | 44-220 | 统计页 |
-| `TodayRecordCard(record, onDelete)` | `HomeScreen.kt` | 312-367 | 今日记录卡片 |
+| `StatsRow(stats)` | `StatsScreen.kt` | - | 统计卡片组 |
+| `StatsScreen(viewModel)` | `StatsScreen.kt` | - | 统计页 |
+| `TodayOverview(todaySpend, todayCount)` | `HomeScreen.kt` | - | 今日概览 |
+| `TodayRecordCard(record)` | `HomeScreen.kt` | - | 今日记录卡片 |
 | `toMillis(range)` | `AnalyticsService.kt` | 43-63 | 日期范围转毫秒 |
 | `TrendChart(dailyData, metric, ...)` | `TrendChart.kt` | 46-225 | 柱状趋势图 |
 | `TrendLineChart(dailyData, metric, ...)` | `TrendChart.kt` | 227-473 | 折线趋势图 |

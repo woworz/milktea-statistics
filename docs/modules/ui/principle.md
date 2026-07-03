@@ -346,7 +346,21 @@ val viewModel: MilkTeaViewModel = viewModel(
 
 本项目使用 [Miuix](https://github.com/compose-miuix-ui/miuix) (v0.8.8) 作为 UI 组件库，遵循小米 HyperOS 设计规范。
 
-### 7.2 ThemeController 配置
+### 7.2 当前界面优化原则
+
+本项目是轻量级消费记录工具，界面优化目标是「少解释、好扫读、少误触」。本轮 UI 统一采用以下原则：
+
+| 原则 | 实现方式 | 目的 |
+|---|---|---|
+| 页面语义明确 | 每个页面使用 `AppTopBar` 显示标题和一句说明 | 用户进入页面后立即知道当前页面能做什么 |
+| 关键数据前置 | 首页和统计页使用 `MetricCard` 展示花费、杯数、均价 | 让高频信息在第一屏可快速扫读 |
+| 筛选控件一致 | 日期、品牌、图表指标统一使用 `FilterPill` | 降低学习成本，选中态更明显 |
+| 空状态可行动 | 空状态统一使用 `EmptyStateCard`，必要时提供操作按钮 | 避免只告诉用户「没有数据」，同时给出下一步 |
+| 误触保护 | 记录页删除前使用确认弹窗 | 防止小屏幕误触造成数据丢失 |
+| 触控友好 | 筛选胶囊使用至少 44dp 的最小高度 | 符合移动端触控习惯 |
+| 信息分组 | 设置页输入区、品牌列表、统计图表使用卡片分组 | 用空间和容器建立层级，而不是堆叠文本 |
+
+### 7.3 ThemeController 配置
 
 ```kotlin
 @Composable
@@ -372,7 +386,7 @@ fun MilkTeaTheme(
 }
 ```
 
-### 7.3 ColorSchemeMode 枚举
+### 7.4 ColorSchemeMode 枚举
 
 | 模式 | 说明 |
 |---|---|
@@ -383,7 +397,7 @@ fun MilkTeaTheme(
 | `MonetLight` | 动态取色 + 强制浅色 |
 | `MonetDark` | 动态取色 + 强制深色 |
 
-### 7.4 Miuix 组件使用
+### 7.5 Miuix 组件使用
 
 ```kotlin
 import top.yukonga.miuix.kmp.basic.Scaffold
@@ -403,7 +417,7 @@ Text(
 )
 ```
 
-### 7.5 文字样式 (TextStyles)
+### 7.6 文字样式 (TextStyles)
 
 | 样式 | 字号 | 用途 |
 |---|---|---|
@@ -483,3 +497,5 @@ val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 - 按钮和可点击卡片语义明确
 - 颜色对比度满足 WCAG 标准（Material 3 默认配色已优化）
 - 支持系统字体大小调整
+- 删除常用品牌的图标会带上具体品牌名，便于读屏用户理解操作对象
+- 筛选胶囊不只依赖颜色表达选中态，还通过边框和字重强化状态

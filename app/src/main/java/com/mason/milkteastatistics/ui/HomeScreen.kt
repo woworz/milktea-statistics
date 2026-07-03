@@ -1,7 +1,6 @@
 package com.mason.milkteastatistics.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,11 +8,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -26,6 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mason.milkteastatistics.data.MilkTeaRecord
 import com.mason.milkteastatistics.ui.components.AddEditRecordDialog
+import com.mason.milkteastatistics.ui.components.AppTopBar
+import com.mason.milkteastatistics.ui.components.EmptyStateCard
+import com.mason.milkteastatistics.ui.components.MetricCard
+import com.mason.milkteastatistics.ui.components.SectionHeader
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.FloatingActionButton
 import top.yukonga.miuix.kmp.basic.Card
@@ -46,18 +49,10 @@ fun HomeScreen(viewModel: MilkTeaViewModel) {
 
     Scaffold(
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            ) {
-                Text(
-                    text = "首页",
-                    style = MiuixTheme.textStyles.title3,
-                    color = MiuixTheme.colorScheme.onSurface,
-                )
-            }
+            AppTopBar(
+                title = "今日奶茶",
+                subtitle = "快速记录今天喝了什么、花了多少",
+            )
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -74,42 +69,35 @@ fun HomeScreen(viewModel: MilkTeaViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // Simple stats row
             item {
                 val todayPrice = todayRecords.sumOf { it.price }
-                SimpleStatsRow(
+                TodayOverview(
                     todaySpend = todayPrice,
                     todayCount = todayCount,
                 )
             }
 
-            // Recent summary (single line, hidden when empty)
             if (todayRecords.isNotEmpty()) {
                 val mostRecent = todayRecords.sortedByDescending { it.timestamp }.first()
                 item {
-                    RecentSummary(record = mostRecent)
+                    SectionHeader(
+                        title = "今天的记录",
+                        trailing = "最近 ${recentSummary(record = mostRecent)}",
+                    )
                 }
             }
 
-            // Today's records section
             if (todayRecords.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .fillMaxSize()
-                            .padding(vertical = 48.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "今天还没喝奶茶 ☕\n点击 + 添加",
-                            style = MiuixTheme.textStyles.body1,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        )
-                    }
+                    EmptyStateCard(
+                        title = "今天还没有记录",
+                        message = "喝完顺手记一下，统计会更准确。",
+                        actionLabel = "添加记录",
+                        onAction = { showAddDialog = true },
+                    )
                 }
             } else {
                 items(todayRecords.sortedByDescending { it.timestamp }, key = { it.id }) { record ->
@@ -137,68 +125,37 @@ fun HomeScreen(viewModel: MilkTeaViewModel) {
 }
 
 @Composable
-private fun SimpleStatsRow(
+private fun TodayOverview(
     todaySpend: Double,
     todayCount: Int,
 ) {
-    Card(
+    Row(
         modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.SpaceEvenly,
-        ) {
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "今日花费",
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "¥%.1f".format(todaySpend),
-                    style = MiuixTheme.textStyles.title1,
-                    fontWeight = FontWeight.Bold,
-                    color = MiuixTheme.colorScheme.onSurface,
-                )
-            }
-            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                Text(
-                    text = "今日杯数",
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                )
-                Spacer(Modifier.height(4.dp))
-                Text(
-                    text = "$todayCount",
-                    style = MiuixTheme.textStyles.title1,
-                    fontWeight = FontWeight.Bold,
-                    color = MiuixTheme.colorScheme.onSurface,
-                )
-            }
-        }
+        MetricCard(
+            label = "今日花费",
+            value = "¥%.1f".format(todaySpend),
+            modifier = Modifier.weight(1f),
+            valueColor = MiuixTheme.colorScheme.primary,
+        )
+        MetricCard(
+            label = "今日杯数",
+            value = "$todayCount",
+            modifier = Modifier.weight(1f),
+            icon = Icons.Default.DateRange,
+        )
     }
 }
 
-@Composable
-private fun RecentSummary(record: MilkTeaRecord) {
-    val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
+private fun recentSummary(record: MilkTeaRecord): String {
+    val timeFormat = SimpleDateFormat("HH:mm", Locale.getDefault())
     val time = timeFormat.format(Date(record.timestamp))
-    val summary = buildString {
-        append("最近: ")
+    return buildString {
         append(record.brand)
-        append(" ¥")
-        append("%.1f".format(record.price))
         append(" · ")
         append(time)
     }
-    Text(
-        text = summary,
-        style = MiuixTheme.textStyles.body2,
-        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-    )
 }
 
 @Composable
@@ -211,7 +168,8 @@ private fun TodayRecordCard(record: MilkTeaRecord) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(12.dp),
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -225,7 +183,7 @@ private fun TodayRecordCard(record: MilkTeaRecord) {
                     color = MiuixTheme.colorScheme.onSurface,
                 )
                 Text(
-                    text = "¥%.2f".format(record.price),
+                    text = "¥%.1f".format(record.price),
                     style = MiuixTheme.textStyles.title3,
                     fontWeight = FontWeight.Bold,
                     color = MiuixTheme.colorScheme.primary,
@@ -234,14 +192,13 @@ private fun TodayRecordCard(record: MilkTeaRecord) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically,
             ) {
-                record.drinkName?.let { name ->
-                    Text(
-                        text = name,
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    )
-                }
+                Text(
+                    text = record.drinkName ?: "未填写饮品",
+                    style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
                 Text(
                     text = timeFormat.format(Date(record.timestamp)),
                     style = MiuixTheme.textStyles.body2,

@@ -1,7 +1,6 @@
 package com.mason.milkteastatistics.ui
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -9,7 +8,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
@@ -23,7 +21,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mason.milkteastatistics.ui.components.AppTopBar
+import com.mason.milkteastatistics.ui.components.EmptyStateCard
+import com.mason.milkteastatistics.ui.components.SectionHeader
 import top.yukonga.miuix.kmp.basic.Scaffold
+import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text
 import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.TextField
@@ -39,104 +41,96 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
 
     Scaffold(
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            ) {
-                Text(
-                    text = "设置",
-                    style = MiuixTheme.textStyles.title3,
-                    color = MiuixTheme.colorScheme.onSurface,
-                )
-            }
+            AppTopBar(
+                title = "设置",
+                subtitle = "维护常用品牌，让添加记录更快",
+            )
         },
     ) { padding ->
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp)
+                .padding(horizontal = 20.dp)
                 .verticalScroll(rememberScrollState()),
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Spacer(Modifier.height(16.dp))
-
-            Text(
-                text = "常用品牌",
-                style = MiuixTheme.textStyles.title2,
+            SectionHeader(
+                title = "常用品牌",
+                trailing = "${commonBrands.size} 个",
             )
 
-            Spacer(Modifier.height(16.dp))
-
-            // 添加
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                TextField(
-                    value = newBrand,
-                    onValueChange = { newBrand = it },
-                    label = "输入品牌名称",
-                    useLabelAsPlaceholder = true,
-                    modifier = Modifier.weight(1f),
-                )
-                Button(
-                    onClick = {
-                        if (newBrand.isNotBlank()) {
-                            viewModel.addCommonBrand(newBrand.trim())
-                            newBrand = ""
-                        }
-                    },
-                    enabled = newBrand.isNotBlank(),
+            Card(modifier = Modifier.fillMaxWidth()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(12.dp),
                 ) {
-                    Text("添加")
+                    TextField(
+                        value = newBrand,
+                        onValueChange = { newBrand = it },
+                        label = "输入品牌名称",
+                        useLabelAsPlaceholder = true,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Button(
+                        onClick = {
+                            if (newBrand.isNotBlank()) {
+                                viewModel.addCommonBrand(newBrand.trim())
+                                newBrand = ""
+                            }
+                        },
+                        enabled = newBrand.isNotBlank(),
+                    ) {
+                        Text("添加")
+                    }
                 }
             }
 
-            Spacer(Modifier.height(16.dp))
-
-            // 列表
             if (commonBrands.isEmpty()) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 48.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    Text(
-                        text = "还没有常用品牌",
-                        style = MiuixTheme.textStyles.body1,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                    )
-                }
+                EmptyStateCard(
+                    title = "还没有常用品牌",
+                    message = "添加后会出现在记录弹窗里，常喝品牌可以一键选择。",
+                )
             } else {
-                commonBrands.forEachIndexed { index, cb ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 12.dp),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            text = cb.name,
-                            style = MiuixTheme.textStyles.body1,
-                            modifier = Modifier.weight(1f),
-                        )
-                        IconButton(onClick = { viewModel.removeCommonBrand(cb.id) }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = "删除",
-                                tint = MiuixTheme.colorScheme.error,
-                            )
+                Card(modifier = Modifier.fillMaxWidth()) {
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        commonBrands.forEachIndexed { index, cb ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(horizontal = 16.dp, vertical = 12.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically,
+                            ) {
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = cb.name,
+                                        style = MiuixTheme.textStyles.body1,
+                                        color = MiuixTheme.colorScheme.onSurface,
+                                    )
+                                    Text(
+                                        text = "添加记录时可快速选择",
+                                        style = MiuixTheme.textStyles.footnote1,
+                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                    )
+                                }
+                                IconButton(onClick = { viewModel.removeCommonBrand(cb.id) }) {
+                                    Icon(
+                                        Icons.Default.Delete,
+                                        contentDescription = "删除 ${cb.name}",
+                                        tint = MiuixTheme.colorScheme.error,
+                                    )
+                                }
+                            }
+                            if (index < commonBrands.lastIndex) {
+                                HorizontalDivider(
+                                    color = MiuixTheme.colorScheme.outline,
+                                )
+                            }
                         }
-                    }
-                    if (index < commonBrands.lastIndex) {
-                        HorizontalDivider(
-                            color = MiuixTheme.colorScheme.outline,
-                        )
                     }
                 }
             }

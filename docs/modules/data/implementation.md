@@ -238,7 +238,6 @@
 | 函数名 | 所在文件 | 行号 | 返回类型 |
 |---|---|---|---|
 | `addCommonBrand(name)` | `MilkTeaRepository.kt` | 64-66 | `suspend Unit` |
-| `brandEmoji(brand)` | `HomeScreen.kt` | 385-392 | `String` |
 | `cancelEdit()` | `MilkTeaViewModel.kt` | 167-169 | `Unit` |
 | `commonBrandDao()` | `MilkTeaDatabase.kt` | 16 | `CommonBrandDao` |
 | `delete(record)` | `MilkTeaDao.kt` | 41-42 | `suspend Unit` |

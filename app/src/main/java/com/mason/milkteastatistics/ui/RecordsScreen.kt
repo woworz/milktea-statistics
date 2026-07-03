@@ -3,7 +3,6 @@ package com.mason.milkteastatistics.ui
 import com.mason.milkteastatistics.model.DateRange
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,10 +10,11 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Delete
@@ -30,11 +30,14 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mason.milkteastatistics.data.MilkTeaRecord
 import com.mason.milkteastatistics.ui.components.AddEditRecordDialog
+import com.mason.milkteastatistics.ui.components.AppTopBar
+import com.mason.milkteastatistics.ui.components.EmptyStateCard
+import com.mason.milkteastatistics.ui.components.FilterPill
+import com.mason.milkteastatistics.ui.components.SectionHeader
 import top.yukonga.miuix.kmp.basic.Scaffold
 import top.yukonga.miuix.kmp.basic.FloatingActionButton
 import top.yukonga.miuix.kmp.basic.Card
 import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.Button
 import top.yukonga.miuix.kmp.basic.IconButton
 import top.yukonga.miuix.kmp.basic.Icon
 import top.yukonga.miuix.kmp.theme.MiuixTheme
@@ -52,21 +55,14 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
     val commonBrands by viewModel.commonBrands.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
+    var recordPendingDelete by remember { mutableStateOf<MilkTeaRecord?>(null) }
 
     Scaffold(
         topBar = {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .statusBarsPadding()
-                    .padding(horizontal = 16.dp, vertical = 12.dp),
-            ) {
-                Text(
-                    text = "记录",
-                    style = MiuixTheme.textStyles.title3,
-                    color = MiuixTheme.colorScheme.onSurface,
-                )
-            }
+            AppTopBar(
+                title = "全部记录",
+                subtitle = "按时间和品牌筛选，点击卡片可编辑",
+            )
         },
         floatingActionButton = {
             FloatingActionButton(
@@ -80,10 +76,9 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
-                .padding(horizontal = 16.dp),
+                .padding(horizontal = 20.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            // 筛选
             item {
                 RecordsFilterSection(
                     selectedRange = selectedDateRange,
@@ -94,27 +89,30 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
                 )
             }
 
+            if (filteredRecords.isNotEmpty()) {
+                item {
+                    SectionHeader(
+                        title = "记录列表",
+                        trailing = "${filteredRecords.size} 条",
+                    )
+                }
+            }
+
             if (filteredRecords.isEmpty()) {
                 item {
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(vertical = 48.dp),
-                        contentAlignment = Alignment.Center,
-                    ) {
-                        Text(
-                            text = "暂无记录\n点击 + 添加",
-                            style = MiuixTheme.textStyles.body1,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                        )
-                    }
+                    EmptyStateCard(
+                        title = "暂无匹配记录",
+                        message = "可以切换筛选条件，或添加一条新的奶茶记录。",
+                        actionLabel = "添加记录",
+                        onAction = { showAddDialog = true },
+                    )
                 }
             } else {
                 items(filteredRecords, key = { it.id }) { record ->
                     RecordCard(
                         record = record,
                         onEdit = { viewModel.startEdit(record) },
-                        onDelete = { viewModel.deleteRecord(record) },
+                        onDelete = { recordPendingDelete = record },
                     )
                 }
             }
@@ -152,6 +150,29 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
             },
         )
     }
+
+    recordPendingDelete?.let { record ->
+        AlertDialog(
+            onDismissRequest = { recordPendingDelete = null },
+            title = { Text("删除这条记录？") },
+            text = { Text("删除后无法恢复：${record.brand} ¥%.1f".format(record.price)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        viewModel.deleteRecord(record)
+                        recordPendingDelete = null
+                    },
+                ) {
+                    Text("删除", color = MiuixTheme.colorScheme.error)
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { recordPendingDelete = null }) {
+                    Text("取消")
+                }
+            },
+        )
+    }
 }
 
 // ==================== 筛选栏 ====================
@@ -165,64 +186,37 @@ private fun RecordsFilterSection(
     onBrandSelected: (String?) -> Unit,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        // 日期范围 - 用 Button 替代 SegmentedButton
         Row(
             modifier = Modifier.fillMaxWidth(),
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             DateRange.entries.forEach { range ->
                 val selected = selectedRange == range
-                Button(
+                FilterPill(
+                    label = range.label,
+                    selected = selected,
                     onClick = { onRangeSelected(range) },
                     modifier = Modifier.weight(1f),
-                ) {
-                    Text(
-                        text = if (selected) "✓ ${range.label}" else range.label,
-                        color = if (selected) {
-                            MiuixTheme.colorScheme.primary
-                        } else {
-                            MiuixTheme.colorScheme.onSurface
-                        },
-                    )
-                }
+                )
             }
         }
 
-        // 品牌筛选 - 用 Button 替代 FilterChip
         LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             item {
-                val selected = selectedBrand == null
-                Button(
+                FilterPill(
+                    label = "全部品牌",
+                    selected = selectedBrand == null,
                     onClick = { onBrandSelected(null) },
-                ) {
-                    Text(
-                        text = if (selected) "✓ 全部品牌" else "全部品牌",
-                        style = MiuixTheme.textStyles.body2,
-                        color = if (selected) {
-                            MiuixTheme.colorScheme.primary
-                        } else {
-                            MiuixTheme.colorScheme.onSurface
-                        },
-                    )
-                }
+                )
             }
             items(allBrands) { brand ->
-                val selected = selectedBrand == brand
-                Button(
+                FilterPill(
+                    label = brand,
+                    selected = selectedBrand == brand,
                     onClick = { onBrandSelected(brand) },
-                ) {
-                    Text(
-                        text = if (selected) "✓ $brand" else brand,
-                        style = MiuixTheme.textStyles.body2,
-                        color = if (selected) {
-                            MiuixTheme.colorScheme.primary
-                        } else {
-                            MiuixTheme.colorScheme.onSurface
-                        },
-                    )
-                }
+                )
             }
         }
     }
@@ -280,6 +274,12 @@ private fun RecordCard(
                 Text(
                     text = dateFormat.format(Date(record.timestamp)),
                     style = MiuixTheme.textStyles.body2,
+                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                )
+                Spacer(Modifier.height(4.dp))
+                Text(
+                    text = "点击编辑",
+                    style = MiuixTheme.textStyles.footnote1,
                     color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                 )
             }
