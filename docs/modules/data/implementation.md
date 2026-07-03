@@ -119,7 +119,7 @@
 | `getDailyAggregates(start, end)` | 第 101-114 行 | `Flow<List<DailySummary>>` | 按天聚合（杯数、总花费、均价） |
 | `getDailyAggregatesByBrand(start, end, brand)` | 第 116-133 行 | `Flow<List<DailySummary>>` | 按天聚合 + 品牌筛选 |
 
-**注意**：聚合查询中使用 `(timestamp / 86400000) * 86400000` 将时间戳按天取整。
+**注意**：聚合查询使用 SQLite `localtime`/`start of day` 以设备本地自然日分组，避免 UTC 天导致凌晨记录归到前一天。
 
 ---
 
@@ -163,7 +163,7 @@
 | 配置 | 行号 | 说明 |
 |---|---|---|
 | `@Database(entities = [...], version = 3)` | 第 8-12 行 | 包含 2 个实体，版本 3 |
-| `.fallbackToDestructiveMigration(dropAllTables = true)` | 第 28 行 | 破坏性迁移（开发阶段） |
+| `.addMigrations(MIGRATION_1_2, MIGRATION_2_3)` | 第 47 行 | 显式迁移，保留用户数据 |
 | 数据库文件名 `"milk_tea_database"` | 第 27 行 | SQLite 数据库文件名 |
 
 ---

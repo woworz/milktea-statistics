@@ -75,13 +75,19 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 DateRange.entries.forEach { range ->
+                    val selected = selectedDateRange == range
                     Button(
                         onClick = { viewModel.setDateRange(range) },
                         modifier = Modifier.weight(1f),
                     ) {
                         Text(
-                            text = range.label,
+                            text = if (selected) "✓ ${range.label}" else range.label,
                             style = MiuixTheme.textStyles.body2,
+                            color = if (selected) {
+                                MiuixTheme.colorScheme.primary
+                            } else {
+                                MiuixTheme.colorScheme.onSurface
+                            },
                         )
                     }
                 }
@@ -92,17 +98,33 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 item {
+                    val selected = selectedBrand == null
                     Button(
                         onClick = { viewModel.setBrandFilter(null) },
                     ) {
-                        Text("全部")
+                        Text(
+                            text = if (selected) "✓ 全部" else "全部",
+                            color = if (selected) {
+                                MiuixTheme.colorScheme.primary
+                            } else {
+                                MiuixTheme.colorScheme.onSurface
+                            },
+                        )
                     }
                 }
                 items(allBrands) { brand ->
+                    val selected = selectedBrand == brand
                     Button(
                         onClick = { viewModel.setBrandFilter(brand) },
                     ) {
-                        Text(brand)
+                        Text(
+                            text = if (selected) "✓ $brand" else brand,
+                            color = if (selected) {
+                                MiuixTheme.colorScheme.primary
+                            } else {
+                                MiuixTheme.colorScheme.onSurface
+                            },
+                        )
                     }
                 }
             }
@@ -118,10 +140,19 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
             ) {
                 Row(horizontalArrangement = Arrangement.spacedBy(4.dp)) {
                     ChartMetric.entries.forEach { m ->
+                        val selected = chartMetric == m
                         Button(
                             onClick = { chartMetric = m },
                         ) {
-                            Text(m.label, style = MiuixTheme.textStyles.body2)
+                            Text(
+                                text = if (selected) "✓ ${m.label}" else m.label,
+                                style = MiuixTheme.textStyles.body2,
+                                color = if (selected) {
+                                    MiuixTheme.colorScheme.primary
+                                } else {
+                                    MiuixTheme.colorScheme.onSurface
+                                },
+                            )
                         }
                     }
                 }
@@ -129,12 +160,28 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
                     Button(
                         onClick = { useLineChart = false },
                     ) {
-                        Text("柱状", style = MiuixTheme.textStyles.body2)
+                        Text(
+                            text = if (!useLineChart) "✓ 柱状" else "柱状",
+                            style = MiuixTheme.textStyles.body2,
+                            color = if (!useLineChart) {
+                                MiuixTheme.colorScheme.primary
+                            } else {
+                                MiuixTheme.colorScheme.onSurface
+                            },
+                        )
                     }
                     Button(
                         onClick = { useLineChart = true },
                     ) {
-                        Text("折线", style = MiuixTheme.textStyles.body2)
+                        Text(
+                            text = if (useLineChart) "✓ 折线" else "折线",
+                            style = MiuixTheme.textStyles.body2,
+                            color = if (useLineChart) {
+                                MiuixTheme.colorScheme.primary
+                            } else {
+                                MiuixTheme.colorScheme.onSurface
+                            },
+                        )
                     }
                 }
             }

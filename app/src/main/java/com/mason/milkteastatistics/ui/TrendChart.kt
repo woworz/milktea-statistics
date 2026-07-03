@@ -26,6 +26,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.drawscope.Stroke
 import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -135,7 +136,7 @@ fun TrendChart(
                     -36.dp.toPx(),
                     y + 4.sp.toPx(),
                     android.graphics.Paint().apply {
-                        color = textColor.hashCode()
+                        color = textColor.toArgb()
                         textSize = 10.sp.toPx()
                         textAlign = android.graphics.Paint.Align.LEFT
                         isAntiAlias = true
@@ -174,7 +175,7 @@ fun TrendChart(
                     x + barWidth / 2,
                     chartHeight + 16.dp.toPx(),
                     android.graphics.Paint().apply {
-                        color = textColor.hashCode()
+                        color = textColor.toArgb()
                         textSize = 9.sp.toPx()
                         textAlign = android.graphics.Paint.Align.CENTER
                         isAntiAlias = true
@@ -314,7 +315,7 @@ fun TrendLineChart(
                     -36.dp.toPx(),
                     y + 4.sp.toPx(),
                     android.graphics.Paint().apply {
-                        color = textColor.hashCode()
+                        color = textColor.toArgb()
                         textSize = 10.sp.toPx()
                         textAlign = android.graphics.Paint.Align.LEFT
                         isAntiAlias = true
@@ -421,7 +422,7 @@ fun TrendLineChart(
                         point.x,
                         chartHeight + 16.dp.toPx(),
                         android.graphics.Paint().apply {
-                            color = textColor.hashCode()
+                            color = textColor.toArgb()
                             textSize = 9.sp.toPx()
                             textAlign = android.graphics.Paint.Align.CENTER
                             isAntiAlias = true

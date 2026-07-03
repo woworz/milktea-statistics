@@ -13,6 +13,7 @@ import com.mason.milkteastatistics.model.DateRange
 import com.mason.milkteastatistics.service.AnalyticsService
 import com.mason.milkteastatistics.service.BrandService
 import com.mason.milkteastatistics.service.RecordService
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharingStarted
@@ -20,6 +21,7 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.flatMapLatest
+import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
@@ -89,12 +91,26 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
 
     // ========== 今日统计（顶部保留） ==========
 
-    private val todayStart = getStartOfToday()
+    private val todayRange: StateFlow<Pair<Long, Long>> = flow {
+        while (true) {
+            val range = getTodayRange()
+            emit(range)
+            delay((range.second - System.currentTimeMillis()).coerceAtLeast(60_000L))
+        }
+    }.stateIn(
+        viewModelScope,
+        SharingStarted.WhileSubscribed(5_000),
+        getTodayRange(),
+    )
 
-    val todayCount: StateFlow<Int> = recordService.getTodayCount(todayStart, todayStart + 86_400_000L)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val todayCount: StateFlow<Int> = todayRange
+        .flatMapLatest { (start, end) -> recordService.getTodayCount(start, end) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), 0)
 
-    val todayRecords: StateFlow<List<MilkTeaRecord>> = recordService.getTodayRecords(todayStart, todayStart + 86_400_000L)
+    @OptIn(ExperimentalCoroutinesApi::class)
+    val todayRecords: StateFlow<List<MilkTeaRecord>> = todayRange
+        .flatMapLatest { (start, end) -> recordService.getTodayRecords(start, end) }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     // ========== 筛选范围内的统计 ==========
@@ -168,12 +184,14 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
         _editingRecord.value = null
     }
 
-    private fun getStartOfToday(): Long {
+    private fun getTodayRange(): Pair<Long, Long> {
         val calendar = Calendar.getInstance()
         calendar.set(Calendar.HOUR_OF_DAY, 0)
         calendar.set(Calendar.MINUTE, 0)
         calendar.set(Calendar.SECOND, 0)
         calendar.set(Calendar.MILLISECOND, 0)
-        return calendar.timeInMillis
+        val start = calendar.timeInMillis
+        calendar.add(Calendar.DAY_OF_MONTH, 1)
+        return start to calendar.timeInMillis
     }
 }

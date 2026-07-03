@@ -60,8 +60,8 @@
 职责：通过 Jetpack App Startup 在 Application 创建阶段预初始化耗时组件，消除冷启动卡顿。
 
 - **`MilkTeaApplication`**：自定义 Application 类，注册 App Startup 框架
-- **`DatabaseInitializer`**：实现 `Initializer<MilkTeaDatabase>`，在 ContentProvider 阶段后台构建 Room 数据库
-- **效果**：数据库初始化从「首次进入首页时同步阻塞」提前到「应用启动时后台完成"
+- **`DatabaseInitializer`**：实现 `Initializer<MilkTeaDatabase>`，通过 App Startup 的 `InitializationProvider` 元数据注册
+- **效果**：数据库初始化从「首次进入首页时同步阻塞」提前到「应用启动阶段预构建」
 
 ### 2.2 数据层 (Data Layer)
 
@@ -199,7 +199,7 @@ selectedBrand ──────┘
 ### 4.2 版本历史
 
 - **v3** (当前)：添加 `CommonBrand` 实体，新增 `drinkName` 字段
-- 采用 `fallbackToDestructiveMigration` 策略（开发阶段允许数据重建）
+- 采用显式 Room Migration：v1→v2 添加 `drinkName` 字段，v2→v3 新增 `CommonBrand` 表
 
 ## 5. UI 设计要点
 

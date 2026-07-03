@@ -22,7 +22,7 @@
 ### 1.1 作用
 
 - 作为 `android:name` 注册在 `AndroidManifest.xml` 中
-- Jetpack App Startup 库通过 ContentProvider 机制，在 `MilkTeaApplication.onCreate()` 之前自动调度 `DatabaseInitializer`
+- Jetpack App Startup 库通过 ContentProvider 机制，在 `MilkTeaApplication.onCreate()` 之前自动调度已注册的 `DatabaseInitializer`
 - 无需手动调用初始化代码
 
 ---
@@ -69,6 +69,8 @@ MilkTeaViewModel 构造时 getDatabase() 返回已就绪实例（无阻塞）
 | 配置 | 行号 | 说明 |
 |---|---|---|
 | `android:name=".MilkTeaApplication"` | 第 6 行 | 注册自定义 Application 类 |
+| `androidx.startup.InitializationProvider` | Application 内 | 注册 App Startup Provider |
+| `DatabaseInitializer` metadata | Provider 内 | 声明需要自动执行的初始化器 |
 
 ---
 

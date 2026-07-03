@@ -20,14 +20,14 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
 
 ### 1.2 理想方案
 
-将数据库初始化从「首次使用时的同步阻塞」提前到「应用启动时的后台预加载"：
+将数据库初始化从「首次使用时的同步阻塞」提前到「应用启动阶段预加载」：
 
 ```
 改造前：
 用户点击图标 → MainActivity.onCreate() → ViewModel() → getDatabase()【阻塞】→ 首页显示
 
 改造后：
-用户点击图标 → Application 启动【后台：DatabaseInitializer 预加载数据库】→ MainActivity.onCreate() → ViewModel() → getDatabase()【直接返回已就绪实例】→ 首页显示
+用户点击图标 → Application 启动【DatabaseInitializer 预加载数据库】→ MainActivity.onCreate() → ViewModel() → getDatabase()【直接返回已就绪实例】→ 首页显示
 ```
 
 ## 2. Jetpack App Startup 原理

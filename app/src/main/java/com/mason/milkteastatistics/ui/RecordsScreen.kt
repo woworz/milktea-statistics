@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -170,30 +171,57 @@ private fun RecordsFilterSection(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
             DateRange.entries.forEach { range ->
+                val selected = selectedRange == range
                 Button(
                     onClick = { onRangeSelected(range) },
                     modifier = Modifier.weight(1f),
                 ) {
-                    Text(range.label)
+                    Text(
+                        text = if (selected) "✓ ${range.label}" else range.label,
+                        color = if (selected) {
+                            MiuixTheme.colorScheme.primary
+                        } else {
+                            MiuixTheme.colorScheme.onSurface
+                        },
+                    )
                 }
             }
         }
 
         // 品牌筛选 - 用 Button 替代 FilterChip
-        Row(
-            modifier = Modifier.fillMaxWidth(),
+        LazyRow(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            Button(
-                onClick = { onBrandSelected(null) },
-            ) {
-                Text("全部品牌", style = MiuixTheme.textStyles.body2)
+            item {
+                val selected = selectedBrand == null
+                Button(
+                    onClick = { onBrandSelected(null) },
+                ) {
+                    Text(
+                        text = if (selected) "✓ 全部品牌" else "全部品牌",
+                        style = MiuixTheme.textStyles.body2,
+                        color = if (selected) {
+                            MiuixTheme.colorScheme.primary
+                        } else {
+                            MiuixTheme.colorScheme.onSurface
+                        },
+                    )
+                }
             }
-            allBrands.forEach { brand ->
+            items(allBrands) { brand ->
+                val selected = selectedBrand == brand
                 Button(
                     onClick = { onBrandSelected(brand) },
                 ) {
-                    Text(brand, style = MiuixTheme.textStyles.body2)
+                    Text(
+                        text = if (selected) "✓ $brand" else brand,
+                        style = MiuixTheme.textStyles.body2,
+                        color = if (selected) {
+                            MiuixTheme.colorScheme.primary
+                        } else {
+                            MiuixTheme.colorScheme.onSurface
+                        },
+                    )
                 }
             }
         }

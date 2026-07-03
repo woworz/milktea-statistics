@@ -179,7 +179,7 @@ class MilkTeaRepository(
 
 ```sql
 SELECT 
-    (timestamp / 86400000) * 86400000 AS dayStart,
+    CAST(strftime('%s', timestamp / 1000, 'unixepoch', 'localtime', 'start of day', 'utc') AS INTEGER) * 1000 AS dayStart,
     COUNT(*) AS count,
     COALESCE(SUM(price), 0) AS totalSpend,
     COALESCE(AVG(price), 0) AS avgPrice
@@ -189,7 +189,7 @@ GROUP BY dayStart
 ORDER BY dayStart ASC
 ```
 
-- `(timestamp / 86400000) * 86400000`：将毫秒时间戳按天取整（86400000 = 24h * 60m * 60s * 1000ms）
+- `localtime` + `start of day` + `utc`：按设备本地自然日归组，再转换回时间戳，保证图表日期标签与用户看到的日期一致
 - `GROUP BY dayStart`：按天分组聚合
 - `COALESCE(SUM(price), 0)`：处理无记录时返回 0 而非 NULL
 
@@ -199,14 +199,14 @@ ORDER BY dayStart ASC
 @Database(entities = [MilkTeaRecord::class, CommonBrand::class], version = 3)
 
 Room.databaseBuilder(...)
-    .fallbackToDestructiveMigration(dropAllTables = true)
+    .addMigrations(MIGRATION_1_2, MIGRATION_2_3)
     .build()
 ```
 
-当前使用 **破坏性迁移** (`fallbackToDestructiveMigration`)：
-- 数据库版本升级时，删除所有旧表，重新创建
-- **适用场景**：开发阶段，快速迭代 schema
-- **生产风险**：会丢失用户数据，上线前需改为 `Migration` 方案
+当前使用显式 **Room Migration**：
+- v1→v2：为 `milk_tea_records` 添加 `drinkName` 字段
+- v2→v3：新增 `common_brands` 表和品牌名唯一索引
+- 数据库版本升级时保留已有用户记录
 
 生产环境应使用显式迁移：
 ```kotlin

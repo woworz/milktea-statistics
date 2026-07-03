@@ -101,7 +101,7 @@ interface MilkTeaDao {
     @Query(
         """
         SELECT 
-            (timestamp / 86400000) * 86400000 AS dayStart,
+            CAST(strftime('%s', timestamp / 1000, 'unixepoch', 'localtime', 'start of day', 'utc') AS INTEGER) * 1000 AS dayStart,
             COUNT(*) AS count,
             COALESCE(SUM(price), 0) AS totalSpend,
             COALESCE(AVG(price), 0) AS avgPrice
@@ -116,7 +116,7 @@ interface MilkTeaDao {
     @Query(
         """
         SELECT 
-            (timestamp / 86400000) * 86400000 AS dayStart,
+            CAST(strftime('%s', timestamp / 1000, 'unixepoch', 'localtime', 'start of day', 'utc') AS INTEGER) * 1000 AS dayStart,
             COUNT(*) AS count,
             COALESCE(SUM(price), 0) AS totalSpend,
             COALESCE(AVG(price), 0) AS avgPrice
