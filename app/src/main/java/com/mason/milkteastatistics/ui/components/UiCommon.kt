@@ -37,7 +37,7 @@ fun AppTopBar(
         modifier = modifier
             .fillMaxWidth()
             .statusBarsPadding()
-            .padding(horizontal = 20.dp, vertical = 14.dp),
+            .padding(start = 20.dp, top = 6.dp, end = 20.dp, bottom = 10.dp),
         verticalArrangement = Arrangement.spacedBy(4.dp),
     ) {
         Text(

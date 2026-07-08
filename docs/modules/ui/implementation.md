@@ -108,7 +108,7 @@
 
 | 函数 | 行号 | 说明 |
 |---|---|---|
-| `AppTopBar(title, subtitle)` | - | 统一页面顶部标题和说明文案，保留状态栏安全间距 |
+| `AppTopBar(title, subtitle)` | - | 统一页面顶部标题和说明文案，保留状态栏安全区，额外顶部间距压缩为 6dp |
 | `EmptyStateCard(...)` | - | 统一空状态卡片，可选主操作按钮 |
 | `FilterPill(label, selected, onClick)` | - | 用于日期范围、品牌、图表指标等筛选项，选中态更清晰 |
 | `SectionHeader(title, trailing)` | - | 区块标题和右侧摘要信息 |
