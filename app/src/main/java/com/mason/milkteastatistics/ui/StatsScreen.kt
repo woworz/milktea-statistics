@@ -13,6 +13,10 @@ import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.Card
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -27,10 +31,6 @@ import com.mason.milkteastatistics.ui.components.EmptyStateCard
 import com.mason.milkteastatistics.ui.components.FilterPill
 import com.mason.milkteastatistics.ui.components.MetricCard
 import com.mason.milkteastatistics.ui.components.SectionHeader
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun StatsScreen(viewModel: MilkTeaViewModel) {
@@ -138,8 +138,8 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
                         Text(
                             text = if (chartMetric == ChartMetric.COUNT) "每日杯数" else "每日金额",
                             modifier = Modifier.padding(horizontal = 8.dp),
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         if (useLineChart) {
                             TrendLineChart(
@@ -182,7 +182,7 @@ private fun StatsRow(stats: DailyStats) {
                 label = "总花费",
                 value = "¥%.1f".format(stats.totalSpend),
                 modifier = Modifier.weight(1f),
-                valueColor = MiuixTheme.colorScheme.primary,
+                valueColor = MaterialTheme.colorScheme.primary,
             )
             MetricCard(
                 label = "杯数",
@@ -194,7 +194,7 @@ private fun StatsRow(stats: DailyStats) {
             label = "平均单价",
             value = "¥%.1f".format(stats.avgPrice),
             modifier = Modifier.fillMaxWidth(),
-            valueColor = MiuixTheme.colorScheme.primary,
+            valueColor = MaterialTheme.colorScheme.primary,
         )
     }
 }

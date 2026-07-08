@@ -13,7 +13,12 @@ import androidx.compose.foundation.layout.statusBarsPadding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -21,11 +26,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun AppTopBar(
@@ -42,14 +42,14 @@ fun AppTopBar(
     ) {
         Text(
             text = title,
-            style = MiuixTheme.textStyles.title2,
+            style = MaterialTheme.typography.headlineSmall,
             fontWeight = FontWeight.Bold,
-            color = MiuixTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         Text(
             text = subtitle,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
     }
 }
@@ -72,14 +72,14 @@ fun EmptyStateCard(
         ) {
             Text(
                 text = title,
-                style = MiuixTheme.textStyles.title3,
+                style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
-                color = MiuixTheme.colorScheme.onSurface,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             Text(
                 text = message,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
             if (actionLabel != null && onAction != null) {
                 Button(onClick = onAction) {
@@ -98,7 +98,7 @@ fun FilterPill(
     onClick: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    val colorScheme = MiuixTheme.colorScheme
+    val colorScheme = MaterialTheme.colorScheme
     Surface(
         modifier = modifier
             .defaultMinSize(minHeight = 44.dp)
@@ -121,7 +121,7 @@ fun FilterPill(
         ) {
             Text(
                 text = label,
-                style = MiuixTheme.textStyles.body2,
+                style = MaterialTheme.typography.bodyMedium,
                 fontWeight = if (selected) FontWeight.Bold else FontWeight.Normal,
                 color = if (selected) colorScheme.primary else colorScheme.onSurface,
             )
@@ -142,15 +142,15 @@ fun SectionHeader(
     ) {
         Text(
             text = title,
-            style = MiuixTheme.textStyles.title3,
+            style = MaterialTheme.typography.titleMedium,
             fontWeight = FontWeight.Bold,
-            color = MiuixTheme.colorScheme.onSurface,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         if (trailing != null) {
             Text(
                 text = trailing,
-                style = MiuixTheme.textStyles.body2,
-                color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
             )
         }
     }
@@ -162,8 +162,9 @@ fun MetricCard(
     value: String,
     modifier: Modifier = Modifier,
     icon: ImageVector? = null,
-    valueColor: Color = MiuixTheme.colorScheme.onSurface,
+    valueColor: Color? = null,
 ) {
+    val resolvedValueColor = valueColor ?: MaterialTheme.colorScheme.onSurface
     Card(modifier = modifier) {
         Column(
             modifier = Modifier
@@ -179,20 +180,20 @@ fun MetricCard(
                     Icon(
                         icon,
                         contentDescription = null,
-                        tint = MiuixTheme.colorScheme.primary,
+                        tint = MaterialTheme.colorScheme.primary,
                     )
                 }
                 Text(
                     text = label,
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             Text(
                 text = value,
-                style = MiuixTheme.textStyles.title2,
+                style = MaterialTheme.typography.headlineSmall,
                 fontWeight = FontWeight.Bold,
-                color = valueColor,
+                color = resolvedValueColor,
             )
         }
     }

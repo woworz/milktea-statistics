@@ -12,6 +12,15 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material3.Button
+import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -24,15 +33,6 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import com.mason.milkteastatistics.ui.components.AppTopBar
 import com.mason.milkteastatistics.ui.components.EmptyStateCard
 import com.mason.milkteastatistics.ui.components.SectionHeader
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.HorizontalDivider
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 
 @Composable
 fun SettingsScreen(viewModel: MilkTeaViewModel) {
@@ -68,12 +68,12 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
                         .fillMaxWidth()
                         .padding(12.dp),
                 ) {
-                    TextField(
+                    OutlinedTextField(
                         value = newBrand,
                         onValueChange = { newBrand = it },
-                        label = "输入品牌名称",
-                        useLabelAsPlaceholder = true,
+                        label = { Text("输入品牌名称") },
                         modifier = Modifier.weight(1f),
+                        singleLine = true,
                     )
                     Button(
                         onClick = {
@@ -108,26 +108,26 @@ fun SettingsScreen(viewModel: MilkTeaViewModel) {
                                 Column(modifier = Modifier.weight(1f)) {
                                     Text(
                                         text = cb.name,
-                                        style = MiuixTheme.textStyles.body1,
-                                        color = MiuixTheme.colorScheme.onSurface,
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface,
                                     )
                                     Text(
                                         text = "添加记录时可快速选择",
-                                        style = MiuixTheme.textStyles.footnote1,
-                                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                                     )
                                 }
                                 IconButton(onClick = { viewModel.removeCommonBrand(cb.id) }) {
                                     Icon(
                                         Icons.Default.Delete,
                                         contentDescription = "删除 ${cb.name}",
-                                        tint = MiuixTheme.colorScheme.error,
+                                        tint = MaterialTheme.colorScheme.error,
                                     )
                                 }
                             }
                             if (index < commonBrands.lastIndex) {
                                 HorizontalDivider(
-                                    color = MiuixTheme.colorScheme.outline,
+                                    color = MaterialTheme.colorScheme.outline,
                                 )
                             }
                         }

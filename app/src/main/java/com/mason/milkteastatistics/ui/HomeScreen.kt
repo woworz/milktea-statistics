@@ -13,6 +13,12 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.DateRange
+import androidx.compose.material3.Card
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -29,12 +35,6 @@ import com.mason.milkteastatistics.ui.components.AppTopBar
 import com.mason.milkteastatistics.ui.components.EmptyStateCard
 import com.mason.milkteastatistics.ui.components.MetricCard
 import com.mason.milkteastatistics.ui.components.SectionHeader
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.FloatingActionButton
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -137,7 +137,7 @@ private fun TodayOverview(
             label = "今日花费",
             value = "¥%.1f".format(todaySpend),
             modifier = Modifier.weight(1f),
-            valueColor = MiuixTheme.colorScheme.primary,
+            valueColor = MaterialTheme.colorScheme.primary,
         )
         MetricCard(
             label = "今日杯数",
@@ -178,15 +178,15 @@ private fun TodayRecordCard(record: MilkTeaRecord) {
             ) {
                 Text(
                     text = record.brand,
-                    style = MiuixTheme.textStyles.title3,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MiuixTheme.colorScheme.onSurface,
+                    color = MaterialTheme.colorScheme.onSurface,
                 )
                 Text(
                     text = "¥%.1f".format(record.price),
-                    style = MiuixTheme.textStyles.title3,
+                    style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Bold,
-                    color = MiuixTheme.colorScheme.primary,
+                    color = MaterialTheme.colorScheme.primary,
                 )
             }
             Row(
@@ -196,13 +196,13 @@ private fun TodayRecordCard(record: MilkTeaRecord) {
             ) {
                 Text(
                     text = record.drinkName ?: "未填写饮品",
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Text(
                     text = timeFormat.format(Date(record.timestamp)),
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }

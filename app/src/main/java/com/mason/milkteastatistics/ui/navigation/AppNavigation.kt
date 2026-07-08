@@ -7,6 +7,11 @@ import androidx.compose.material.icons.filled.Home
 import androidx.compose.material.icons.automirrored.filled.List
 import androidx.compose.material.icons.filled.Settings
 import androidx.activity.ComponentActivity
+import androidx.compose.material3.Icon
+import androidx.compose.material3.NavigationBar
+import androidx.compose.material3.NavigationBarItem
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
@@ -22,9 +27,6 @@ import com.mason.milkteastatistics.ui.MilkTeaViewModel
 import com.mason.milkteastatistics.ui.RecordsScreen
 import com.mason.milkteastatistics.ui.SettingsScreen
 import com.mason.milkteastatistics.ui.StatsScreen
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.NavigationBar
-import top.yukonga.miuix.kmp.basic.NavigationBarItem
 
 data class NavDestination(
     val route: String,
@@ -61,8 +63,13 @@ fun AppNavigation() {
                                 restoreState = true
                             }
                         },
-                        icon = dest.icon,
-                        label = dest.label
+                        icon = {
+                            Icon(
+                                imageVector = dest.icon,
+                                contentDescription = dest.label,
+                            )
+                        },
+                        label = { Text(dest.label) },
                     )
                 }
             }

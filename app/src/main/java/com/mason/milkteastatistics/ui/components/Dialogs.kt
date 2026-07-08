@@ -11,9 +11,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
+import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
@@ -27,10 +31,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.mason.milkteastatistics.data.CommonBrand
 import com.mason.milkteastatistics.data.MilkTeaRecord
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.Button
-import top.yukonga.miuix.kmp.basic.TextField
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
@@ -112,8 +112,8 @@ fun AddEditRecordDialog(
                     if (commonBrands.isNotEmpty()) {
                         Text(
                             text = "常用品牌",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(6.dp))
                         Row(
@@ -131,51 +131,51 @@ fun AddEditRecordDialog(
                                 Button(
                                     onClick = { showManageBrands = true },
                                 ) {
-                                    Text("管理", style = MiuixTheme.textStyles.body2)
+                                    Text("管理", style = MaterialTheme.typography.bodyMedium)
                                 }
                             }
                         }
                         Spacer(Modifier.height(10.dp))
                     }
 
-                    TextField(
+                    OutlinedTextField(
                         value = brand,
                         onValueChange = { brand = it },
-                        label = "品牌",
-                        useLabelAsPlaceholder = true,
+                        label = { Text("品牌") },
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                     )
                     Spacer(Modifier.height(12.dp))
-                    TextField(
+                    OutlinedTextField(
                         value = drinkName,
                         onValueChange = { drinkName = it },
-                        label = "饮品（可选）",
-                        useLabelAsPlaceholder = true,
+                        label = { Text("饮品（可选）") },
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                     )
                     Spacer(Modifier.height(12.dp))
-                    TextField(
+                    OutlinedTextField(
                         value = price,
                         onValueChange = {
                             price = it
                             priceError = it.isNotEmpty() && it.toDoubleOrNull() == null
                         },
-                        label = "价格 (¥)",
-                        useLabelAsPlaceholder = true,
+                        label = { Text("价格 (¥)") },
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
                     )
                     if (priceError) {
                         Text(
                             text = "请输入有效数字",
-                            style = MiuixTheme.textStyles.body2,
-                            color = MiuixTheme.colorScheme.error,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.error,
                         )
                     }
                     Spacer(Modifier.height(12.dp))
                     Text(
                         text = "时间",
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                     Spacer(Modifier.height(4.dp))
                     Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -187,7 +187,7 @@ fun AddEditRecordDialog(
                             Text(
                                 text = dateFormat.format(Date(selectedTimestamp)),
                                 modifier = Modifier.padding(12.dp),
-                                style = MiuixTheme.textStyles.body2,
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                         OutlinedCard(
@@ -198,7 +198,7 @@ fun AddEditRecordDialog(
                             Text(
                                 text = timeFormat.format(Date(selectedTimestamp)),
                                 modifier = Modifier.padding(12.dp),
-                                style = MiuixTheme.textStyles.body2,
+                                style = MaterialTheme.typography.bodyMedium,
                             )
                         }
                     }
@@ -292,8 +292,8 @@ private fun DateAdjuster(
     Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
         Text(
             text = dateFormat.format(Date(timestamp)),
-            style = MiuixTheme.textStyles.title3,
-            color = MiuixTheme.colorScheme.onSurface,
+            style = MaterialTheme.typography.titleMedium,
+            color = MaterialTheme.colorScheme.onSurface,
         )
         DateAdjustRow(
             label = "年份",
@@ -330,8 +330,8 @@ private fun DateAdjustRow(
     ) {
         Text(
             text = label,
-            style = MiuixTheme.textStyles.body2,
-            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
         )
         Row(
             horizontalArrangement = Arrangement.spacedBy(8.dp),
@@ -340,8 +340,8 @@ private fun DateAdjustRow(
             TextButton(onClick = onDecrease) { Text("-") }
             Text(
                 text = value,
-                style = MiuixTheme.textStyles.title3,
-                color = MiuixTheme.colorScheme.onSurface,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.onSurface,
             )
             TextButton(onClick = onIncrease) { Text("+") }
         }
@@ -368,12 +368,12 @@ private fun ManageBrandsDialog(
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
-                    TextField(
+                    OutlinedTextField(
                         value = newBrand,
                         onValueChange = { newBrand = it },
-                        label = "品牌名称",
-                        useLabelAsPlaceholder = true,
+                        label = { Text("品牌名称") },
                         modifier = Modifier.weight(1f),
+                        singleLine = true,
                     )
                     Button(
                         onClick = {
@@ -389,8 +389,8 @@ private fun ManageBrandsDialog(
                 if (commonBrands.isEmpty()) {
                     Text(
                         text = "还没有常用品牌\n在输入框中添加",
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 } else {
                     commonBrands.forEach { cb ->
@@ -403,11 +403,11 @@ private fun ManageBrandsDialog(
                         ) {
                             Text(
                                 text = cb.name,
-                                style = MiuixTheme.textStyles.body2,
+                                style = MaterialTheme.typography.bodyMedium,
                                 modifier = Modifier.weight(1f),
                             )
                             TextButton(onClick = { onDelete(cb.id) }) {
-                                Text("删除", color = MiuixTheme.colorScheme.error)
+                                Text("删除", color = MaterialTheme.colorScheme.error)
                             }
                         }
                     }

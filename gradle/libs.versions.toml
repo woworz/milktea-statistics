@@ -13,7 +13,6 @@ room = "2.7.1"
 ksp = "2.1.20-1.0.32"
 navigationCompose = "2.9.0"
 startup = "1.2.0"
-miuix = "0.8.8"
 
 [libraries]
 androidx-core-ktx = { group = "androidx.core", name = "core-ktx", version.ref = "coreKtx" }
@@ -46,9 +45,6 @@ androidx-navigation-compose = { group = "androidx.navigation", name = "navigatio
 
 # Startup
 androidx-startup-runtime = { group = "androidx.startup", name = "startup-runtime", version.ref = "startup" }
-
-# Miuix
-miuix-ui = { group = "top.yukonga.miuix.kmp", name = "miuix", version.ref = "miuix" }
 
 [plugins]
 android-application = { id = "com.android.application", version.ref = "agp" }

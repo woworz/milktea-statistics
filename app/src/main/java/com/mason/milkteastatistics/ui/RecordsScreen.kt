@@ -14,6 +14,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Card
+import androidx.compose.material3.FloatingActionButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
@@ -34,13 +41,6 @@ import com.mason.milkteastatistics.ui.components.AppTopBar
 import com.mason.milkteastatistics.ui.components.EmptyStateCard
 import com.mason.milkteastatistics.ui.components.FilterPill
 import com.mason.milkteastatistics.ui.components.SectionHeader
-import top.yukonga.miuix.kmp.basic.Scaffold
-import top.yukonga.miuix.kmp.basic.FloatingActionButton
-import top.yukonga.miuix.kmp.basic.Card
-import top.yukonga.miuix.kmp.basic.Text
-import top.yukonga.miuix.kmp.basic.IconButton
-import top.yukonga.miuix.kmp.basic.Icon
-import top.yukonga.miuix.kmp.theme.MiuixTheme
 import java.text.SimpleDateFormat
 import java.util.Date
 import java.util.Locale
@@ -163,7 +163,7 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
                         recordPendingDelete = null
                     },
                 ) {
-                    Text("删除", color = MiuixTheme.colorScheme.error)
+                    Text("删除", color = MaterialTheme.colorScheme.error)
                 }
             },
             dismissButton = {
@@ -252,42 +252,42 @@ private fun RecordCard(
                 ) {
                     Text(
                         text = record.brand,
-                        style = MiuixTheme.textStyles.title3,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
                     )
                     Text(
                         text = "¥%.2f".format(record.price),
-                        style = MiuixTheme.textStyles.title3,
+                        style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Bold,
-                        color = MiuixTheme.colorScheme.primary,
+                        color = MaterialTheme.colorScheme.primary,
                     )
                 }
                 record.drinkName?.let { name ->
                     Spacer(Modifier.height(2.dp))
                     Text(
                         text = name,
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                     )
                 }
                 Spacer(Modifier.height(2.dp))
                 Text(
                     text = dateFormat.format(Date(record.timestamp)),
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
                 Spacer(Modifier.height(4.dp))
                 Text(
                     text = "点击编辑",
-                    style = MiuixTheme.textStyles.footnote1,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
             IconButton(onClick = onDelete) {
                 Icon(
                     Icons.Default.Delete,
                     contentDescription = "删除",
-                    tint = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
         }
