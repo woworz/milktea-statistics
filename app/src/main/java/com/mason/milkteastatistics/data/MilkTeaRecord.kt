@@ -29,3 +29,18 @@ data class DailySummary(
     val totalSpend: Double,
     val avgPrice: Double,
 )
+
+/** 筛选范围内的消费洞察 */
+data class ConsumptionInsights(
+    val activeDays: Int = 0,
+    val averageSpendPerActiveDay: Double = 0.0,
+    val averageCupsPerActiveDay: Double = 0.0,
+    val topBrand: String? = null,
+    val topBrandCount: Int = 0,
+    val favoriteDrink: String? = null,
+    val favoriteDrinkCount: Int = 0,
+    val busiestWeekday: String? = null,
+    val busiestWeekdayCount: Int = 0,
+    val mostExpensiveRecord: MilkTeaRecord? = null,
+    val projectedMonthSpend: Double? = null,
+)

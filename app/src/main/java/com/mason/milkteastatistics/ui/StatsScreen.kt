@@ -14,6 +14,7 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Card
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
@@ -22,15 +23,24 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import com.mason.milkteastatistics.data.ConsumptionInsights
 import com.mason.milkteastatistics.data.DailyStats
+import com.mason.milkteastatistics.data.MilkTeaRecord
 import com.mason.milkteastatistics.ui.components.AppTopBar
 import com.mason.milkteastatistics.ui.components.EmptyStateCard
 import com.mason.milkteastatistics.ui.components.FilterPill
 import com.mason.milkteastatistics.ui.components.MetricCard
 import com.mason.milkteastatistics.ui.components.SectionHeader
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
 
 @Composable
 fun StatsScreen(viewModel: MilkTeaViewModel) {
@@ -39,6 +49,7 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
     val allBrands by viewModel.allBrands.collectAsStateWithLifecycle()
     val stats by viewModel.stats.collectAsStateWithLifecycle()
     val dailyAggregates by viewModel.dailyAggregates.collectAsStateWithLifecycle()
+    val insights by viewModel.insights.collectAsStateWithLifecycle()
 
     var chartMetric by remember { mutableStateOf(ChartMetric.COUNT) }
     var useLineChart by remember { mutableStateOf(false) }
@@ -96,6 +107,11 @@ fun StatsScreen(viewModel: MilkTeaViewModel) {
 
             SectionHeader(title = "概览")
             StatsRow(stats = stats)
+
+            if (stats.totalCount > 0) {
+                SectionHeader(title = "消费洞察")
+                ConsumptionInsightsCard(insights = insights)
+            }
 
             SectionHeader(
                 title = "每日趋势",
@@ -196,5 +212,154 @@ private fun StatsRow(stats: DailyStats) {
             modifier = Modifier.fillMaxWidth(),
             valueColor = MaterialTheme.colorScheme.primary,
         )
+    }
+}
+
+@Composable
+private fun ConsumptionInsightsCard(insights: ConsumptionInsights) {
+    Card(modifier = Modifier.fillMaxWidth()) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
+            verticalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                InsightBlock(
+                    label = "活跃日均",
+                    value = "¥%.1f".format(insights.averageSpendPerActiveDay),
+                    caption = "${insights.activeDays} 天有记录",
+                    modifier = Modifier.weight(1f),
+                )
+                InsightBlock(
+                    label = "日均杯数",
+                    value = "%.1f".format(insights.averageCupsPerActiveDay),
+                    caption = "按有记录日期计算",
+                    modifier = Modifier.weight(1f),
+                )
+            }
+
+            insights.projectedMonthSpend?.let { projectedSpend ->
+                HorizontalDivider()
+                InsightLine(
+                    label = "本月预测",
+                    value = "¥%.1f".format(projectedSpend),
+                    caption = "按当前消费节奏估算",
+                )
+            }
+
+            HorizontalDivider()
+            InsightLine(
+                label = "最常买",
+                value = insights.topBrand ?: "暂无",
+                caption = if (insights.topBrandCount > 0) "${insights.topBrandCount} 次" else null,
+            )
+            InsightLine(
+                label = "常喝日",
+                value = insights.busiestWeekday ?: "暂无",
+                caption = if (insights.busiestWeekdayCount > 0) "${insights.busiestWeekdayCount} 杯" else null,
+            )
+            InsightLine(
+                label = "饮品偏好",
+                value = insights.favoriteDrink ?: "暂未填写饮品",
+                caption = if (insights.favoriteDrinkCount > 0) "${insights.favoriteDrinkCount} 次" else null,
+            )
+            InsightLine(
+                label = "最高单笔",
+                value = insights.mostExpensiveRecord?.let { "¥%.1f".format(it.price) } ?: "暂无",
+                caption = insights.mostExpensiveRecord?.toPriceCaption(),
+            )
+        }
+    }
+}
+
+@Composable
+private fun InsightBlock(
+    label: String,
+    value: String,
+    caption: String,
+    modifier: Modifier = Modifier,
+) {
+    Column(
+        modifier = modifier,
+        verticalArrangement = Arrangement.spacedBy(4.dp),
+    ) {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+        )
+        Text(
+            text = value,
+            style = MaterialTheme.typography.headlineSmall,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+        )
+        Text(
+            text = caption,
+            style = MaterialTheme.typography.bodySmall,
+            color = MaterialTheme.colorScheme.onSurfaceVariant,
+            maxLines = 1,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+@Composable
+private fun InsightLine(
+    label: String,
+    value: String,
+    caption: String? = null,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(12.dp),
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Column(
+            modifier = Modifier.weight(1f),
+            verticalArrangement = Arrangement.spacedBy(2.dp),
+        ) {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            if (caption != null) {
+                Text(
+                    text = caption,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    maxLines = 1,
+                    overflow = TextOverflow.Ellipsis,
+                )
+            }
+        }
+        Text(
+            text = value,
+            modifier = Modifier.weight(1f),
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.onSurface,
+            textAlign = TextAlign.End,
+            maxLines = 2,
+            overflow = TextOverflow.Ellipsis,
+        )
+    }
+}
+
+private fun MilkTeaRecord.toPriceCaption(): String {
+    val dateFormat = SimpleDateFormat("MM/dd", Locale.getDefault())
+    return buildString {
+        append(brand)
+        drinkName?.let { name ->
+            append(" · ")
+            append(name)
+        }
+        append(" · ")
+        append(dateFormat.format(Date(timestamp)))
     }
 }

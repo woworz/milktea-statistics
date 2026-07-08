@@ -3,6 +3,7 @@ package com.mason.milkteastatistics.ui
 import android.app.Application
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import com.mason.milkteastatistics.data.ConsumptionInsights
 import com.mason.milkteastatistics.data.DailyStats
 import com.mason.milkteastatistics.data.DailySummary
 import com.mason.milkteastatistics.data.MilkTeaDatabase
@@ -134,6 +135,15 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
             analyticsService.getDailyAggregates(start, end, brand)
         }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val insights: StateFlow<ConsumptionInsights> = combine(
+        filteredRecords,
+        dailyAggregates,
+        stats,
+        _selectedDateRange,
+    ) { records, aggregates, statsValue, range ->
+        analyticsService.buildConsumptionInsights(records, aggregates, statsValue, range)
+    }.stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), ConsumptionInsights())
 
     // ========== 编辑状态 ==========
 
