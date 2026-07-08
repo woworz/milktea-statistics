@@ -10,24 +10,20 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.mason.milkteastatistics.data.CommonBrand
 import com.mason.milkteastatistics.data.MilkTeaRecord
@@ -41,6 +37,12 @@ import java.util.Date
 import java.util.Locale
 
 // ==================== 添加/编辑弹窗 ====================
+
+private enum class RecordDialogMode {
+    Form,
+    Date,
+    Time,
+}
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -60,172 +62,211 @@ fun AddEditRecordDialog(
     var selectedTimestamp by remember(record) {
         mutableStateOf(record?.timestamp ?: System.currentTimeMillis())
     }
-    var showDatePicker by remember { mutableStateOf(false) }
-    var showTimePicker by remember { mutableStateOf(false) }
+    var dialogMode by remember(record) { mutableStateOf(RecordDialogMode.Form) }
     var showManageBrands by remember { mutableStateOf(false) }
+    val timePickerState = rememberTimePickerState(
+        initialHour = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
+            .get(Calendar.HOUR_OF_DAY),
+        initialMinute = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
+            .get(Calendar.MINUTE),
+        is24Hour = true,
+    )
 
     val dateFormat = remember { SimpleDateFormat("yyyy-MM-dd", Locale.getDefault()) }
     val timeFormat = remember { SimpleDateFormat("HH:mm", Locale.getDefault()) }
 
+    LaunchedEffect(dialogMode) {
+        when (dialogMode) {
+            RecordDialogMode.Time -> {
+                val cal = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
+                timePickerState.hour = cal.get(Calendar.HOUR_OF_DAY)
+                timePickerState.minute = cal.get(Calendar.MINUTE)
+            }
+
+            RecordDialogMode.Form,
+            RecordDialogMode.Date -> Unit
+        }
+    }
+
     AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (isEdit) "编辑记录" else "添加奶茶记录") },
+        onDismissRequest = {
+            if (dialogMode == RecordDialogMode.Form) {
+                onDismiss()
+            } else {
+                dialogMode = RecordDialogMode.Form
+            }
+        },
+        title = {
+            Text(
+                when (dialogMode) {
+                    RecordDialogMode.Form -> if (isEdit) "编辑记录" else "添加奶茶记录"
+                    RecordDialogMode.Date -> "选择日期"
+                    RecordDialogMode.Time -> "选择时间"
+                },
+            )
+        },
         text = {
-            Column {
-                // 常用品牌快捷标签
-                if (commonBrands.isNotEmpty()) {
+            when (dialogMode) {
+                RecordDialogMode.Form -> Column {
+                    // 常用品牌快捷标签
+                    if (commonBrands.isNotEmpty()) {
+                        Text(
+                            text = "常用品牌",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            commonBrands.forEach { cb ->
+                                Button(
+                                    onClick = { brand = if (brand == cb.name) "" else cb.name },
+                                ) {
+                                    Text(cb.name)
+                                }
+                            }
+                            if (onAddCommonBrand != null) {
+                                Button(
+                                    onClick = { showManageBrands = true },
+                                ) {
+                                    Text("管理", style = MiuixTheme.textStyles.body2)
+                                }
+                            }
+                        }
+                        Spacer(Modifier.height(10.dp))
+                    }
+
+                    TextField(
+                        value = brand,
+                        onValueChange = { brand = it },
+                        label = "品牌",
+                        useLabelAsPlaceholder = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    TextField(
+                        value = drinkName,
+                        onValueChange = { drinkName = it },
+                        label = "饮品（可选）",
+                        useLabelAsPlaceholder = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    Spacer(Modifier.height(12.dp))
+                    TextField(
+                        value = price,
+                        onValueChange = {
+                            price = it
+                            priceError = it.isNotEmpty() && it.toDoubleOrNull() == null
+                        },
+                        label = "价格 (¥)",
+                        useLabelAsPlaceholder = true,
+                        modifier = Modifier.fillMaxWidth(),
+                    )
+                    if (priceError) {
+                        Text(
+                            text = "请输入有效数字",
+                            style = MiuixTheme.textStyles.body2,
+                            color = MiuixTheme.colorScheme.error,
+                        )
+                    }
+                    Spacer(Modifier.height(12.dp))
                     Text(
-                        text = "常用品牌",
+                        text = "时间",
                         style = MiuixTheme.textStyles.body2,
                         color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
                     )
-                    Spacer(Modifier.height(6.dp))
-                    Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    ) {
-                        commonBrands.forEach { cb ->
-                            Button(
-                                onClick = { brand = if (brand == cb.name) "" else cb.name },
-                            ) {
-                                Text(cb.name)
-                            }
+                    Spacer(Modifier.height(4.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                        OutlinedCard(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { dialogMode = RecordDialogMode.Date },
+                        ) {
+                            Text(
+                                text = dateFormat.format(Date(selectedTimestamp)),
+                                modifier = Modifier.padding(12.dp),
+                                style = MiuixTheme.textStyles.body2,
+                            )
                         }
-                        if (onAddCommonBrand != null) {
-                            Button(
-                                onClick = { showManageBrands = true },
-                            ) {
-                                Text("管理", style = MiuixTheme.textStyles.body2)
-                            }
+                        OutlinedCard(
+                            modifier = Modifier
+                                .weight(1f)
+                                .clickable { dialogMode = RecordDialogMode.Time },
+                        ) {
+                            Text(
+                                text = timeFormat.format(Date(selectedTimestamp)),
+                                modifier = Modifier.padding(12.dp),
+                                style = MiuixTheme.textStyles.body2,
+                            )
                         }
                     }
-                    Spacer(Modifier.height(10.dp))
                 }
 
-                TextField(
-                    value = brand,
-                    onValueChange = { brand = it },
-                    label = "品牌",
-                    useLabelAsPlaceholder = true,
-                    modifier = Modifier.fillMaxWidth(),
+                RecordDialogMode.Date -> DateAdjuster(
+                    timestamp = selectedTimestamp,
+                    dateFormat = dateFormat,
+                    onTimestampChange = { selectedTimestamp = it },
                 )
-                Spacer(Modifier.height(12.dp))
-                TextField(
-                    value = drinkName,
-                    onValueChange = { drinkName = it },
-                    label = "饮品（可选）",
-                    useLabelAsPlaceholder = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                Spacer(Modifier.height(12.dp))
-                TextField(
-                    value = price,
-                    onValueChange = {
-                        price = it
-                        priceError = it.isNotEmpty() && it.toDoubleOrNull() == null
-                    },
-                    label = "价格 (¥)",
-                    useLabelAsPlaceholder = true,
-                    modifier = Modifier.fillMaxWidth(),
-                )
-                if (priceError) {
-                    Text(
-                        text = "请输入有效数字",
-                        style = MiuixTheme.textStyles.body2,
-                        color = MiuixTheme.colorScheme.error,
-                    )
-                }
-                Spacer(Modifier.height(12.dp))
-                Text(
-                    text = "时间",
-                    style = MiuixTheme.textStyles.body2,
-                    color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
-                )
-                Spacer(Modifier.height(4.dp))
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    OutlinedCard(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { showDatePicker = true },
-                    ) {
-                        Text(
-                            text = dateFormat.format(Date(selectedTimestamp)),
-                            modifier = Modifier.padding(12.dp),
-                            style = MiuixTheme.textStyles.body2,
-                        )
-                    }
-                    OutlinedCard(
-                        modifier = Modifier
-                            .weight(1f)
-                            .clickable { showTimePicker = true },
-                    ) {
-                        Text(
-                            text = timeFormat.format(Date(selectedTimestamp)),
-                            modifier = Modifier.padding(12.dp),
-                            style = MiuixTheme.textStyles.body2,
-                        )
-                    }
-                }
+                RecordDialogMode.Time -> TimePicker(state = timePickerState)
             }
         },
         confirmButton = {
             TextButton(
                 onClick = {
-                    val priceValue = price.toDoubleOrNull()
-                    if (brand.isNotBlank() && priceValue != null && priceValue >= 0) {
-                        onConfirm(
-                            brand.trim(),
-                            drinkName.trim().ifBlank { null },
-                            priceValue,
-                            selectedTimestamp,
-                        )
-                    } else {
-                        priceError = true
+                    when (dialogMode) {
+                        RecordDialogMode.Form -> {
+                            val priceValue = price.toDoubleOrNull()
+                            if (brand.isNotBlank() && priceValue != null && priceValue >= 0) {
+                                onConfirm(
+                                    brand.trim(),
+                                    drinkName.trim().ifBlank { null },
+                                    priceValue,
+                                    selectedTimestamp,
+                                )
+                            } else {
+                                priceError = true
+                            }
+                        }
+
+                        RecordDialogMode.Date -> {
+                            dialogMode = RecordDialogMode.Form
+                        }
+
+                        RecordDialogMode.Time -> {
+                            val cal = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
+                            cal.set(Calendar.HOUR_OF_DAY, timePickerState.hour)
+                            cal.set(Calendar.MINUTE, timePickerState.minute)
+                            cal.set(Calendar.SECOND, 0)
+                            cal.set(Calendar.MILLISECOND, 0)
+                            selectedTimestamp = cal.timeInMillis
+                            dialogMode = RecordDialogMode.Form
+                        }
                     }
                 },
             ) {
-                Text(if (isEdit) "保存" else "添加")
+                Text(if (dialogMode == RecordDialogMode.Form) {
+                    if (isEdit) "保存" else "添加"
+                } else {
+                    "确定"
+                })
             }
         },
         dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
+            TextButton(
+                onClick = {
+                    if (dialogMode == RecordDialogMode.Form) {
+                        onDismiss()
+                    } else {
+                        dialogMode = RecordDialogMode.Form
+                    }
+                },
+            ) {
+                Text(if (dialogMode == RecordDialogMode.Form) "取消" else "返回")
+            }
         },
     )
-
-    if (showDatePicker) {
-        MilkTeaDatePickerDialog(
-            onDismiss = { showDatePicker = false },
-            onConfirm = { millis ->
-                val cal = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
-                val pickerCal = Calendar.getInstance().apply { timeInMillis = millis }
-                cal.set(Calendar.YEAR, pickerCal.get(Calendar.YEAR))
-                cal.set(Calendar.MONTH, pickerCal.get(Calendar.MONTH))
-                cal.set(Calendar.DAY_OF_MONTH, pickerCal.get(Calendar.DAY_OF_MONTH))
-                selectedTimestamp = cal.timeInMillis
-                showDatePicker = false
-            },
-            initialDateMillis = selectedTimestamp,
-        )
-    }
-
-    if (showTimePicker) {
-        MilkTeaTimePickerDialog(
-            onDismiss = { showTimePicker = false },
-            onConfirm = { hour, minute ->
-                val cal = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
-                cal.set(Calendar.HOUR_OF_DAY, hour)
-                cal.set(Calendar.MINUTE, minute)
-                cal.set(Calendar.SECOND, 0)
-                cal.set(Calendar.MILLISECOND, 0)
-                selectedTimestamp = cal.timeInMillis
-                showTimePicker = false
-            },
-            initialHour = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
-                .get(Calendar.HOUR_OF_DAY),
-            initialMinute = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
-                .get(Calendar.MINUTE),
-        )
-    }
 
     if (showManageBrands && onAddCommonBrand != null && onRemoveCommonBrand != null) {
         ManageBrandsDialog(
@@ -238,6 +279,72 @@ fun AddEditRecordDialog(
             onDelete = { onRemoveCommonBrand(it) },
             onDismiss = { showManageBrands = false },
         )
+    }
+}
+
+@Composable
+private fun DateAdjuster(
+    timestamp: Long,
+    dateFormat: SimpleDateFormat,
+    onTimestampChange: (Long) -> Unit,
+) {
+    val cal = remember(timestamp) { Calendar.getInstance().apply { timeInMillis = timestamp } }
+    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        Text(
+            text = dateFormat.format(Date(timestamp)),
+            style = MiuixTheme.textStyles.title3,
+            color = MiuixTheme.colorScheme.onSurface,
+        )
+        DateAdjustRow(
+            label = "年份",
+            value = cal.get(Calendar.YEAR).toString(),
+            onDecrease = { onTimestampChange(timestamp.addDateField(Calendar.YEAR, -1)) },
+            onIncrease = { onTimestampChange(timestamp.addDateField(Calendar.YEAR, 1)) },
+        )
+        DateAdjustRow(
+            label = "月份",
+            value = (cal.get(Calendar.MONTH) + 1).toString().padStart(2, '0'),
+            onDecrease = { onTimestampChange(timestamp.addDateField(Calendar.MONTH, -1)) },
+            onIncrease = { onTimestampChange(timestamp.addDateField(Calendar.MONTH, 1)) },
+        )
+        DateAdjustRow(
+            label = "日期",
+            value = cal.get(Calendar.DAY_OF_MONTH).toString().padStart(2, '0'),
+            onDecrease = { onTimestampChange(timestamp.addDateField(Calendar.DAY_OF_MONTH, -1)) },
+            onIncrease = { onTimestampChange(timestamp.addDateField(Calendar.DAY_OF_MONTH, 1)) },
+        )
+    }
+}
+
+@Composable
+private fun DateAdjustRow(
+    label: String,
+    value: String,
+    onDecrease: () -> Unit,
+    onIncrease: () -> Unit,
+) {
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceBetween,
+        verticalAlignment = Alignment.CenterVertically,
+    ) {
+        Text(
+            text = label,
+            style = MiuixTheme.textStyles.body2,
+            color = MiuixTheme.colorScheme.onSurfaceVariantSummary,
+        )
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+            verticalAlignment = Alignment.CenterVertically,
+        ) {
+            TextButton(onClick = onDecrease) { Text("-") }
+            Text(
+                text = value,
+                style = MiuixTheme.textStyles.title3,
+                color = MiuixTheme.colorScheme.onSurface,
+            )
+            TextButton(onClick = onIncrease) { Text("+") }
+        }
     }
 }
 
@@ -313,57 +420,8 @@ private fun ManageBrandsDialog(
     )
 }
 
-// ==================== 日期选择器 ====================
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun MilkTeaDatePickerDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (Long) -> Unit,
-    initialDateMillis: Long,
-) {
-    val state = rememberDatePickerState(initialSelectedDateMillis = initialDateMillis)
-    androidx.compose.material3.DatePickerDialog(
-        onDismissRequest = onDismiss,
-        confirmButton = {
-            TextButton(onClick = {
-                state.selectedDateMillis?.let { onConfirm(it) }
-            }) { Text("确定") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
-        },
-    ) {
-        DatePicker(state = state)
-    }
-}
-
-// ==================== 时间选择器 ====================
-
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun MilkTeaTimePickerDialog(
-    onDismiss: () -> Unit,
-    onConfirm: (hour: Int, minute: Int) -> Unit,
-    initialHour: Int,
-    initialMinute: Int,
-) {
-    val state = rememberTimePickerState(
-        initialHour = initialHour,
-        initialMinute = initialMinute,
-        is24Hour = true,
-    )
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text("选择时间") },
-        text = { TimePicker(state = state) },
-        confirmButton = {
-            TextButton(onClick = {
-                onConfirm(state.hour, state.minute)
-            }) { Text("确定") }
-        },
-        dismissButton = {
-            TextButton(onClick = onDismiss) { Text("取消") }
-        },
-    )
-}
+private fun Long.addDateField(field: Int, amount: Int): Long =
+    Calendar.getInstance().apply {
+        timeInMillis = this@addDateField
+        add(field, amount)
+    }.timeInMillis
