@@ -12,7 +12,7 @@
 | `StatsScreen.kt` | `ui/StatsScreen.kt` | 统计图表页 |
 | `SettingsScreen.kt` | `ui/SettingsScreen.kt` | 设置页 |
 | `TrendChart.kt` | `ui/TrendChart.kt` | 自定义图表组件（柱状图 + 折线图） |
-| `Theme.kt` | `ui/theme/Theme.kt` | 主题配色方案 |
+| `Theme.kt` | `ui/theme/Theme.kt` | Miuix + Material3 主题配色方案 |
 | `Dialogs.kt` | `ui/components/Dialogs.kt` | 弹窗组件 |
 | `UiCommon.kt` | `ui/components/UiCommon.kt` | 通用页面标题、空状态、筛选胶囊、指标卡组件 |
 
@@ -209,20 +209,20 @@
 
 **路径**: `app/src/main/java/com/mason/milkteastatistics/ui/TrendChart.kt`
 
-### 6.1 枚举类
+### 7.1 枚举类
 
 | 类/函数 | 行号 | 说明 |
 |---|---|---|
 | `ChartMetric` enum | **第 40-43 行** | 图表指标：`COUNT`("杯数"), `SPEND`("金额") |
 
-### 6.2 Composable 函数
+### 7.2 Composable 函数
 
 | 函数 | 行号 | 说明 |
 |---|---|---|
 | `TrendChart(dailyData, metric, ...)` | **第 46-225 行** | 柱状趋势图（Canvas 绘制） |
 | `TrendLineChart(dailyData, metric, ...)` | **第 227-473 行** | 折线趋势图（Canvas 绘制，Cubic Bézier 平滑） |
 
-### 6.3 TrendChart 内部逻辑
+### 7.3 TrendChart 内部逻辑
 
 | 逻辑 | 行号 | 说明 |
 |---|---|---|
@@ -232,7 +232,7 @@
 | 点击检测 | 第 78-109 行 | `detectTapGestures` 检测最近柱子 |
 | Tooltip 显示 | 第 187-223 行 | 选中后显示日期和数值的浮动提示框 |
 
-### 6.4 TrendLineChart 内部逻辑
+### 7.4 TrendLineChart 内部逻辑
 
 | 逻辑 | 行号 | 说明 |
 |---|---|---|
@@ -248,21 +248,45 @@
 
 **路径**: `app/src/main/java/com/mason/milkteastatistics/ui/theme/Theme.kt`
 
-### 7.1 Composable 函数
+### 8.1 Composable 函数
 
 | 函数 | 行号 | 说明 |
 |---|---|---|
-| `MilkTeaTheme(darkTheme, dynamicColor, content)` | **第 9-29 行** | 应用主题包装器，使用 MiuixTheme |
+| `MilkTeaTheme(darkTheme, dynamicColor, content)` | - | 应用主题包装器，同时提供 MiuixTheme 和 MaterialTheme |
 
-### 7.2 主题配置
+### 8.2 主题配置
 
 | 配置 | 说明 |
 |---|---|
 | `ThemeController` | Miuix 主题控制器，管理颜色方案 |
 | `ColorSchemeMode.MonetSystem` | 默认使用 Monet 动态取色 |
 | `MiuixTheme` | Miuix 主题容器，提供 colors 和 textStyles |
+| `MaterialTheme` | Material3 主题容器，颜色由 Miuix 语义色映射，供 `AlertDialog`、`DatePicker`、`TimePicker`、图表 Tooltip 等 Material3 组件使用 |
+| `isSystemInDarkTheme()` | 作为 `darkTheme` 默认值，确保 Material3 组件随系统深色模式切换 |
 
-### 7.3 Miuix 组件依赖
+### 8.3 深色模式同步
+
+主界面大量使用 Miuix 组件，而添加记录、管理品牌、日期选择器、时间选择器等弹窗使用 Material3 组件。为避免主界面已进入深色模式但弹窗仍显示亮色，`MilkTeaTheme` 会在 `MiuixTheme` 内再包一层 `MaterialTheme`：
+
+```kotlin
+MiuixTheme(controller = controller) {
+    val miuixColors = MiuixTheme.colorScheme
+    val materialColors = if (darkTheme) {
+        darkColorScheme(...)
+    } else {
+        lightColorScheme(...)
+    }
+
+    MaterialTheme(
+        colorScheme = materialColors,
+        content = content,
+    )
+}
+```
+
+Material3 的 `primary`、`surface`、`onSurface`、`error`、`outline` 等颜色来自 Miuix 语义色，因此添加页弹窗和日期/时间选择器会与 App 主界面一起跟随系统深色模式。
+
+### 8.4 Miuix 组件依赖
 
 在 `build.gradle.kts` 中添加：
 ```kotlin
@@ -275,7 +299,7 @@ implementation("top.yukonga.miuix.kmp:miuix:0.8.8")
 
 **路径**: `app/src/main/java/com/mason/milkteastatistics/ui/components/Dialogs.kt`
 
-### 8.1 Composable 函数
+### 9.1 Composable 函数
 
 | 函数 | 行号 | 说明 |
 |---|---|---|
@@ -284,7 +308,7 @@ implementation("top.yukonga.miuix.kmp:miuix:0.8.8")
 | `MilkTeaDatePickerDialog(...)` | 第 323-342 行 | 日期选择器弹窗 |
 | `MilkTeaTimePickerDialog(...)` | 第 348-372 行 | 时间选择器弹窗（24小时制） |
 
-### 8.2 AddEditRecordDialog 内部逻辑
+### 9.2 AddEditRecordDialog 内部逻辑
 
 | 逻辑 | 行号 | 说明 |
 |---|---|---|
@@ -321,7 +345,7 @@ implementation("top.yukonga.miuix.kmp:miuix:0.8.8")
 | `ManageBrandsDialog(...)` | `Dialogs.kt` | 250-317 | 品牌管理弹窗 |
 | `MetricCard(label, value, ...)` | `UiCommon.kt` | - | 统一指标卡 |
 | `MilkTeaDatePickerDialog(...)` | `Dialogs.kt` | 323-342 | 日期选择器 |
-| `MilkTeaTheme(darkTheme, dynamicColor, content)` | `Theme.kt` | 111-129 | 主题包装器 |
+| `MilkTeaTheme(darkTheme, dynamicColor, content)` | `Theme.kt` | - | Miuix + Material3 主题包装器 |
 | `MilkTeaTimePickerDialog(...)` | `Dialogs.kt` | 348-372 | 时间选择器 |
 | `MilkTeaViewModel(application)` | `MilkTeaViewModel.kt` | 28-179 | ViewModel（服务调度） |
 | `NavDestination` data class | `AppNavigation.kt` | 32-36 | 导航目标数据类 |

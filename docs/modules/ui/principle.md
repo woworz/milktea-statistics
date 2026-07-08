@@ -360,12 +360,12 @@ val viewModel: MilkTeaViewModel = viewModel(
 | 触控友好 | 筛选胶囊使用至少 44dp 的最小高度 | 符合移动端触控习惯 |
 | 信息分组 | 设置页输入区、品牌列表、统计图表使用卡片分组 | 用空间和容器建立层级，而不是堆叠文本 |
 
-### 7.3 ThemeController 配置
+### 7.3 ThemeController 与 MaterialTheme 同步
 
 ```kotlin
 @Composable
 fun MilkTeaTheme(
-    darkTheme: Boolean = false,
+    darkTheme: Boolean = isSystemInDarkTheme(),
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit,
 ) {
@@ -378,13 +378,29 @@ fun MilkTeaTheme(
             ColorSchemeMode.Light
         }
     )
-    
-    MiuixTheme(
-        controller = controller,
-        content = content
-    )
+
+    MiuixTheme(controller = controller) {
+        val miuixColors = MiuixTheme.colorScheme
+        val materialColors = if (darkTheme) {
+            darkColorScheme(...)
+        } else {
+            lightColorScheme(...)
+        }
+
+        MaterialTheme(
+            colorScheme = materialColors,
+            content = content,
+        )
+    }
 }
 ```
+
+主题层同时维护两套 Compose 主题：
+
+- `MiuixTheme`：供主界面的 Miuix 组件读取，负责页面、卡片、底部导航、按钮等基础视觉。
+- `MaterialTheme`：供 Material3 组件读取，负责添加/编辑弹窗、管理品牌弹窗、日期选择器、时间选择器、图表 Tooltip 等。
+
+`MaterialTheme` 的颜色由当前 `MiuixTheme.colorScheme` 映射而来，并使用 `isSystemInDarkTheme()` 决定 `lightColorScheme` / `darkColorScheme`，因此主界面进入深色模式时，添加页面和选择器也会同步切换，不再停留在默认亮色主题。
 
 ### 7.4 ColorSchemeMode 枚举
 
