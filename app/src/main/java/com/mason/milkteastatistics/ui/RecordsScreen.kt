@@ -53,6 +53,7 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
     val filteredRecords by viewModel.filteredRecords.collectAsStateWithLifecycle()
     val editingRecord by viewModel.editingRecord.collectAsStateWithLifecycle()
     val commonBrands by viewModel.commonBrands.collectAsStateWithLifecycle()
+    val purchaseTemplates by viewModel.purchaseTemplates.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
     var recordPendingDelete by remember { mutableStateOf<MilkTeaRecord?>(null) }
@@ -125,6 +126,7 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
         AddEditRecordDialog(
             record = null,
             commonBrands = commonBrands,
+            purchaseTemplates = purchaseTemplates,
             onAddCommonBrand = { viewModel.addCommonBrand(it) },
             onRemoveCommonBrand = { viewModel.removeCommonBrand(it) },
             onDismiss = { showAddDialog = false },
@@ -139,6 +141,7 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
         AddEditRecordDialog(
             record = record,
             commonBrands = commonBrands,
+            purchaseTemplates = purchaseTemplates,
             onAddCommonBrand = { viewModel.addCommonBrand(it) },
             onRemoveCommonBrand = { viewModel.removeCommonBrand(it) },
             onDismiss = { viewModel.cancelEdit() },

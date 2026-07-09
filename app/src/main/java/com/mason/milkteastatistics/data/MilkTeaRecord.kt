@@ -44,3 +44,12 @@ data class ConsumptionInsights(
     val mostExpensiveRecord: MilkTeaRecord? = null,
     val projectedMonthSpend: Double? = null,
 )
+
+/** 历史记录归纳出的快速复购模板 */
+data class PurchaseTemplate(
+    val brand: String,
+    val drinkName: String?,
+    val price: Double,
+    val orderCount: Int,
+    val lastOrderedAt: Long,
+)

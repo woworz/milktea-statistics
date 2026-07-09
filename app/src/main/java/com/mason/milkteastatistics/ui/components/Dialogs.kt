@@ -9,9 +9,11 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
@@ -19,6 +21,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
+import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -28,13 +31,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mason.milkteastatistics.data.CommonBrand
 import com.mason.milkteastatistics.data.MilkTeaRecord
+import com.mason.milkteastatistics.data.PurchaseTemplate
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.TimeZone
 
 // ==================== 添加/编辑弹窗 ====================
 
@@ -49,6 +56,7 @@ private enum class RecordDialogMode {
 fun AddEditRecordDialog(
     record: MilkTeaRecord?,
     commonBrands: List<CommonBrand> = emptyList(),
+    purchaseTemplates: List<PurchaseTemplate> = emptyList(),
     onAddCommonBrand: ((String) -> Unit)? = null,
     onRemoveCommonBrand: ((Long) -> Unit)? = null,
     onDismiss: () -> Unit,
@@ -64,6 +72,9 @@ fun AddEditRecordDialog(
     }
     var dialogMode by remember(record) { mutableStateOf(RecordDialogMode.Form) }
     var showManageBrands by remember { mutableStateOf(false) }
+    val datePickerState = rememberDatePickerState(
+        initialSelectedDateMillis = selectedTimestamp.toPickerDateMillis(),
+    )
     val timePickerState = rememberTimePickerState(
         initialHour = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
             .get(Calendar.HOUR_OF_DAY),
@@ -77,14 +88,17 @@ fun AddEditRecordDialog(
 
     LaunchedEffect(dialogMode) {
         when (dialogMode) {
+            RecordDialogMode.Date -> {
+                datePickerState.selectedDateMillis = selectedTimestamp.toPickerDateMillis()
+            }
+
             RecordDialogMode.Time -> {
                 val cal = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
                 timePickerState.hour = cal.get(Calendar.HOUR_OF_DAY)
                 timePickerState.minute = cal.get(Calendar.MINUTE)
             }
 
-            RecordDialogMode.Form,
-            RecordDialogMode.Date -> Unit
+            RecordDialogMode.Form -> Unit
         }
     }
 
@@ -108,6 +122,32 @@ fun AddEditRecordDialog(
         text = {
             when (dialogMode) {
                 RecordDialogMode.Form -> Column {
+                    if (purchaseTemplates.isNotEmpty()) {
+                        Text(
+                            text = "快速复购",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                        Spacer(Modifier.height(6.dp))
+                        Row(
+                            modifier = Modifier.horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        ) {
+                            purchaseTemplates.forEach { template ->
+                                PurchaseTemplateCard(
+                                    template = template,
+                                    onClick = {
+                                        brand = template.brand
+                                        drinkName = template.drinkName.orEmpty()
+                                        price = "%.2f".format(Locale.US, template.price)
+                                        priceError = false
+                                    },
+                                )
+                            }
+                        }
+                        Spacer(Modifier.height(12.dp))
+                    }
+
                     // 常用品牌快捷标签
                     if (commonBrands.isNotEmpty()) {
                         Text(
@@ -204,11 +244,7 @@ fun AddEditRecordDialog(
                     }
                 }
 
-                RecordDialogMode.Date -> DateAdjuster(
-                    timestamp = selectedTimestamp,
-                    dateFormat = dateFormat,
-                    onTimestampChange = { selectedTimestamp = it },
-                )
+                RecordDialogMode.Date -> DatePicker(state = datePickerState)
                 RecordDialogMode.Time -> TimePicker(state = timePickerState)
             }
         },
@@ -231,6 +267,9 @@ fun AddEditRecordDialog(
                         }
 
                         RecordDialogMode.Date -> {
+                            datePickerState.selectedDateMillis?.let { dateMillis ->
+                                selectedTimestamp = selectedTimestamp.withPickerDate(dateMillis)
+                            }
                             dialogMode = RecordDialogMode.Form
                         }
 
@@ -283,67 +322,39 @@ fun AddEditRecordDialog(
 }
 
 @Composable
-private fun DateAdjuster(
-    timestamp: Long,
-    dateFormat: SimpleDateFormat,
-    onTimestampChange: (Long) -> Unit,
+private fun PurchaseTemplateCard(
+    template: PurchaseTemplate,
+    onClick: () -> Unit,
 ) {
-    val cal = remember(timestamp) { Calendar.getInstance().apply { timeInMillis = timestamp } }
-    Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            text = dateFormat.format(Date(timestamp)),
-            style = MaterialTheme.typography.titleMedium,
-            color = MaterialTheme.colorScheme.onSurface,
-        )
-        DateAdjustRow(
-            label = "年份",
-            value = cal.get(Calendar.YEAR).toString(),
-            onDecrease = { onTimestampChange(timestamp.addDateField(Calendar.YEAR, -1)) },
-            onIncrease = { onTimestampChange(timestamp.addDateField(Calendar.YEAR, 1)) },
-        )
-        DateAdjustRow(
-            label = "月份",
-            value = (cal.get(Calendar.MONTH) + 1).toString().padStart(2, '0'),
-            onDecrease = { onTimestampChange(timestamp.addDateField(Calendar.MONTH, -1)) },
-            onIncrease = { onTimestampChange(timestamp.addDateField(Calendar.MONTH, 1)) },
-        )
-        DateAdjustRow(
-            label = "日期",
-            value = cal.get(Calendar.DAY_OF_MONTH).toString().padStart(2, '0'),
-            onDecrease = { onTimestampChange(timestamp.addDateField(Calendar.DAY_OF_MONTH, -1)) },
-            onIncrease = { onTimestampChange(timestamp.addDateField(Calendar.DAY_OF_MONTH, 1)) },
-        )
-    }
-}
-
-@Composable
-private fun DateAdjustRow(
-    label: String,
-    value: String,
-    onDecrease: () -> Unit,
-    onIncrease: () -> Unit,
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+    OutlinedCard(
+        modifier = Modifier
+            .width(148.dp)
+            .clickable(onClick = onClick),
     ) {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
-        Row(
-            horizontalArrangement = Arrangement.spacedBy(8.dp),
-            verticalAlignment = Alignment.CenterVertically,
+        Column(
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp),
+            verticalArrangement = Arrangement.spacedBy(3.dp),
         ) {
-            TextButton(onClick = onDecrease) { Text("-") }
             Text(
-                text = value,
-                style = MaterialTheme.typography.titleMedium,
+                text = template.brand,
+                style = MaterialTheme.typography.bodyMedium,
+                fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.onSurface,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
             )
-            TextButton(onClick = onIncrease) { Text("+") }
+            Text(
+                text = template.drinkName ?: "未填写饮品",
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                maxLines = 1,
+                overflow = TextOverflow.Ellipsis,
+            )
+            Text(
+                text = "¥%.1f · ${template.orderCount} 次".format(template.price),
+                style = MaterialTheme.typography.labelMedium,
+                color = MaterialTheme.colorScheme.primary,
+            )
         }
     }
 }
@@ -420,8 +431,20 @@ private fun ManageBrandsDialog(
     )
 }
 
-private fun Long.addDateField(field: Int, amount: Int): Long =
-    Calendar.getInstance().apply {
-        timeInMillis = this@addDateField
-        add(field, amount)
+private fun Long.toPickerDateMillis(): Long {
+    val localCal = Calendar.getInstance().apply { timeInMillis = this@toPickerDateMillis }
+    return Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
+        clear()
+        set(localCal.get(Calendar.YEAR), localCal.get(Calendar.MONTH), localCal.get(Calendar.DAY_OF_MONTH))
     }.timeInMillis
+}
+
+private fun Long.withPickerDate(dateMillis: Long): Long {
+    val pickerCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = dateMillis }
+    return Calendar.getInstance().apply {
+        timeInMillis = this@withPickerDate
+        set(Calendar.YEAR, pickerCal.get(Calendar.YEAR))
+        set(Calendar.MONTH, pickerCal.get(Calendar.MONTH))
+        set(Calendar.DAY_OF_MONTH, pickerCal.get(Calendar.DAY_OF_MONTH))
+    }.timeInMillis
+}

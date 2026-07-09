@@ -12,6 +12,8 @@ import kotlinx.coroutines.flow.Flow
  */
 class RecordService(private val repository: MilkTeaRepository) {
 
+    fun getAllRecords(): Flow<List<MilkTeaRecord>> = repository.getAllRecords()
+
     fun getTodayRecords(todayStart: Long, todayEnd: Long): Flow<List<MilkTeaRecord>> =
         repository.getRecordsForDay(todayStart, todayEnd)
 

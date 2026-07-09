@@ -44,6 +44,7 @@ fun HomeScreen(viewModel: MilkTeaViewModel) {
     val todayCount by viewModel.todayCount.collectAsStateWithLifecycle()
     val todayRecords by viewModel.todayRecords.collectAsStateWithLifecycle()
     val commonBrands by viewModel.commonBrands.collectAsStateWithLifecycle()
+    val purchaseTemplates by viewModel.purchaseTemplates.collectAsStateWithLifecycle()
 
     var showAddDialog by remember { mutableStateOf(false) }
 
@@ -113,6 +114,7 @@ fun HomeScreen(viewModel: MilkTeaViewModel) {
         AddEditRecordDialog(
             record = null,
             commonBrands = commonBrands,
+            purchaseTemplates = purchaseTemplates,
             onAddCommonBrand = { viewModel.addCommonBrand(it) },
             onRemoveCommonBrand = { viewModel.removeCommonBrand(it) },
             onDismiss = { showAddDialog = false },

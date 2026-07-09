@@ -10,6 +10,7 @@ import com.mason.milkteastatistics.data.MilkTeaDatabase
 import com.mason.milkteastatistics.data.CommonBrand
 import com.mason.milkteastatistics.data.MilkTeaRecord
 import com.mason.milkteastatistics.data.MilkTeaRepository
+import com.mason.milkteastatistics.data.PurchaseTemplate
 import com.mason.milkteastatistics.model.DateRange
 import com.mason.milkteastatistics.service.AnalyticsService
 import com.mason.milkteastatistics.service.BrandService
@@ -59,6 +60,10 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
     // ========== 常用品牌 ==========
 
     val commonBrands: StateFlow<List<CommonBrand>> = brandService.getCommonBrands()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
+
+    val purchaseTemplates: StateFlow<List<PurchaseTemplate>> = recordService.getAllRecords()
+        .map { records -> records.toPurchaseTemplates() }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5_000), emptyList())
 
     fun addCommonBrand(name: String) {
@@ -204,4 +209,34 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
         calendar.add(Calendar.DAY_OF_MONTH, 1)
         return start to calendar.timeInMillis
     }
+
+    private fun List<MilkTeaRecord>.toPurchaseTemplates(): List<PurchaseTemplate> =
+        groupBy { record ->
+            TemplateKey(
+                brand = record.brand.trim(),
+                drinkName = record.drinkName?.trim()?.takeIf(String::isNotBlank),
+                price = record.price,
+            )
+        }
+            .map { (key, records) ->
+                PurchaseTemplate(
+                    brand = key.brand,
+                    drinkName = key.drinkName,
+                    price = key.price,
+                    orderCount = records.size,
+                    lastOrderedAt = records.maxOf { it.timestamp },
+                )
+            }
+            .filter { it.brand.isNotBlank() }
+            .sortedWith(
+                compareByDescending<PurchaseTemplate> { it.orderCount }
+                    .thenByDescending { it.lastOrderedAt },
+            )
+            .take(6)
+
+    private data class TemplateKey(
+        val brand: String,
+        val drinkName: String?,
+        val price: Double,
+    )
 }
