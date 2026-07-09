@@ -1,84 +1,55 @@
-# 启动模块实现文档
+# 启动模块实现
 
-本模块负责通过 Jetpack App Startup 库在应用启动阶段预初始化 Room 数据库，消除冷启动时首页卡顿。
+启动模块使用 Jetpack App Startup 在应用启动阶段预初始化 Room 数据库，避免首次进入首页时才构建数据库。
 
-## 文件清单
+## 文件
 
-| 文件 | 路径 | 说明 |
-|---|---|---|
-| `MilkTeaApplication.kt` | `MilkTeaApplication.kt` | 自定义 Application 类 |
-| `DatabaseInitializer.kt` | `startup/DatabaseInitializer.kt` | App Startup 数据库初始化器 |
+| 文件 | 职责 |
+|---|---|
+| `MilkTeaApplication.kt` | 自定义 Application，注册在 Manifest 中 |
+| `startup/DatabaseInitializer.kt` | App Startup 初始化器，触发 `MilkTeaDatabase.getDatabase(context)` |
+| `AndroidManifest.xml` | 注册 Application 和 `InitializationProvider` metadata |
 
----
+## 初始化流程
 
-## 1. MilkTeaApplication.kt
-
-**路径**: `app/src/main/java/com/mason/milkteastatistics/MilkTeaApplication.kt`
-
-| 类/函数 | 行号 | 说明 |
-|---|---|---|
-| `MilkTeaApplication` class | **第 12 行** | 自定义 Application 类，注册 App Startup 框架 |
-
-### 1.1 作用
-
-- 作为 `android:name` 注册在 `AndroidManifest.xml` 中
-- Jetpack App Startup 库通过 ContentProvider 机制，在 `MilkTeaApplication.onCreate()` 之前自动调度已注册的 `DatabaseInitializer`
-- 无需手动调用初始化代码
-
----
-
-## 2. DatabaseInitializer.kt
-
-**路径**: `app/src/main/java/com/mason/milkteastatistics/startup/DatabaseInitializer.kt`
-
-| 类/函数 | 行号 | 说明 |
-|---|---|---|
-| `DatabaseInitializer` class | **第 10-23 行** | 实现 `Initializer<MilkTeaDatabase>` 接口 |
-
-### 2.1 方法
-
-| 函数 | 行号 | 返回类型 | 说明 |
-|---|---|---|---|
-| `create(context)` | 第 13-15 行 | `MilkTeaDatabase` | 调用 `MilkTeaDatabase.getDatabase(context)` 触发数据库构建 |
-| `dependencies()` | 第 17-20 行 | `List<Class<out Initializer<*>>>` | 返回空列表，表示无依赖，最早执行 |
-
-### 2.2 初始化流程
-
-```
-Application 启动
-    ↓
-ContentProvider 初始化 (App Startup 自动注册)
-    ↓
+```text
+应用进程启动
+  ↓
+App Startup 的 InitializationProvider 创建
+  ↓
+读取 Manifest 中的 DatabaseInitializer metadata
+  ↓
 DatabaseInitializer.create(context)
-    ↓
-MilkTeaDatabase.getDatabase(context) → Room.databaseBuilder().build()
-    ↓
-数据库单例就绪
-    ↓
+  ↓
+MilkTeaDatabase.getDatabase(context)
+  ↓
+Room 数据库单例创建
+  ↓
 MainActivity.onCreate()
-    ↓
-MilkTeaViewModel 构造时 getDatabase() 返回已就绪实例（无阻塞）
 ```
 
----
+`DatabaseInitializer.dependencies()` 返回空列表，表示没有前置初始化依赖。
 
-## 3. AndroidManifest.xml 配置
+## Manifest 配置
 
-**路径**: `app/src/main/AndroidManifest.xml`
+`application` 使用自定义 Application：
 
-| 配置 | 行号 | 说明 |
-|---|---|---|
-| `android:name=".MilkTeaApplication"` | 第 6 行 | 注册自定义 Application 类 |
-| `androidx.startup.InitializationProvider` | Application 内 | 注册 App Startup Provider |
-| `DatabaseInitializer` metadata | Provider 内 | 声明需要自动执行的初始化器 |
+```xml
+<application
+    android:name=".MilkTeaApplication"
+    ...>
+```
 
----
+`InitializationProvider` 通过 metadata 指向数据库初始化器：
 
-## 索引总表
+```xml
+<meta-data
+    android:name="com.mason.milkteastatistics.startup.DatabaseInitializer"
+    android:value="androidx.startup" />
+```
 
-| 函数/类 | 所在文件 | 行号 | 说明 |
-|---|---|---|---|
-| `MilkTeaApplication` | `MilkTeaApplication.kt` | 10 | 自定义 Application 类 |
-| `DatabaseInitializer` | `DatabaseInitializer.kt` | 10-23 | App Startup 数据库初始化器 |
-| `create(context)` | `DatabaseInitializer.kt` | 13-15 | 初始化数据库 |
-| `dependencies()` | `DatabaseInitializer.kt` | 17-20 | 返回空依赖列表 |
+## 维护注意
+
+- 如果新增初始化器，按依赖关系填写 `dependencies()`。
+- 不要在初始化器里做网络请求或长时间阻塞操作。
+- 数据库预初始化只解决首次获取数据库实例的同步构建成本，具体查询仍由 Room/Flow 在后续执行。
