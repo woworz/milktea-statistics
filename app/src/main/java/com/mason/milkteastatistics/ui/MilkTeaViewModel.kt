@@ -31,6 +31,10 @@ import java.util.Calendar
 
 class MilkTeaViewModel(application: Application) : AndroidViewModel(application) {
 
+    private companion object {
+        const val MAX_PURCHASE_TEMPLATES = 3
+    }
+
     // 依赖层：通过 App Startup 在 Application 启动阶段已完成数据库初始化，
     // 此处 getDatabase() 仅获取已就绪的单例，无阻塞耗时。
     private val db = MilkTeaDatabase.getDatabase(application)
@@ -232,7 +236,7 @@ class MilkTeaViewModel(application: Application) : AndroidViewModel(application)
                 compareByDescending<PurchaseTemplate> { it.orderCount }
                     .thenByDescending { it.lastOrderedAt },
             )
-            .take(6)
+            .take(MAX_PURCHASE_TEMPLATES)
 
     private data class TemplateKey(
         val brand: String,

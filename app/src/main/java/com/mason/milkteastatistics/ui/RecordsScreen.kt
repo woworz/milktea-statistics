@@ -19,12 +19,15 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
+import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.Search
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -57,6 +60,10 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
 
     var showAddDialog by remember { mutableStateOf(false) }
     var recordPendingDelete by remember { mutableStateOf<MilkTeaRecord?>(null) }
+    var searchQuery by remember { mutableStateOf("") }
+    val searchedRecords = remember(filteredRecords, searchQuery) {
+        filteredRecords.filterBySearch(searchQuery)
+    }
 
     Scaffold(
         topBar = {
@@ -90,26 +97,45 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
                 )
             }
 
+            item {
+                RecordsSearchField(
+                    query = searchQuery,
+                    onQueryChange = { searchQuery = it },
+                )
+            }
+
             if (filteredRecords.isNotEmpty()) {
                 item {
                     SectionHeader(
                         title = "记录列表",
-                        trailing = "${filteredRecords.size} 条",
+                        trailing = if (searchQuery.isBlank()) {
+                            "${filteredRecords.size} 条"
+                        } else {
+                            "${searchedRecords.size}/${filteredRecords.size} 条"
+                        },
                     )
                 }
             }
 
-            if (filteredRecords.isEmpty()) {
+            if (searchedRecords.isEmpty()) {
                 item {
                     EmptyStateCard(
-                        title = "暂无匹配记录",
-                        message = "可以切换筛选条件，或添加一条新的奶茶记录。",
-                        actionLabel = "添加记录",
-                        onAction = { showAddDialog = true },
+                        title = if (filteredRecords.isEmpty()) "暂无匹配记录" else "没有搜索结果",
+                        message = if (filteredRecords.isEmpty()) {
+                            "可以切换筛选条件，或添加一条新的奶茶记录。"
+                        } else {
+                            "换个关键词试试，品牌、饮品名和价格都可以搜索。"
+                        },
+                        actionLabel = if (filteredRecords.isEmpty()) "添加记录" else null,
+                        onAction = if (filteredRecords.isEmpty()) {
+                            { showAddDialog = true }
+                        } else {
+                            null
+                        },
                     )
                 }
             } else {
-                items(filteredRecords, key = { it.id }) { record ->
+                items(searchedRecords, key = { it.id }) { record ->
                     RecordCard(
                         record = record,
                         onEdit = { viewModel.startEdit(record) },
@@ -176,6 +202,40 @@ fun RecordsScreen(viewModel: MilkTeaViewModel) {
             },
         )
     }
+}
+
+@Composable
+private fun RecordsSearchField(
+    query: String,
+    onQueryChange: (String) -> Unit,
+) {
+    OutlinedTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        modifier = Modifier.fillMaxWidth(),
+        singleLine = true,
+        label = { Text("搜索记录") },
+        placeholder = { Text("品牌、饮品或价格") },
+        leadingIcon = {
+            Icon(
+                Icons.Default.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+        },
+        trailingIcon = if (query.isNotEmpty()) {
+            {
+                IconButton(onClick = { onQueryChange("") }) {
+                    Icon(
+                        Icons.Default.Close,
+                        contentDescription = "清空搜索",
+                    )
+                }
+            }
+        } else {
+            null
+        },
+    )
 }
 
 // ==================== 筛选栏 ====================
@@ -293,6 +353,28 @@ private fun RecordCard(
                     tint = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
             }
+        }
+    }
+}
+
+private fun List<MilkTeaRecord>.filterBySearch(query: String): List<MilkTeaRecord> {
+    val normalizedQuery = query.trim().lowercase(Locale.getDefault())
+    if (normalizedQuery.isBlank()) {
+        return this
+    }
+
+    val dateFormat = SimpleDateFormat("MM/dd HH:mm", Locale.getDefault())
+    return filter { record ->
+        listOf(
+            record.brand,
+            record.drinkName.orEmpty(),
+            "¥%.2f".format(record.price),
+            "¥%.1f".format(record.price),
+            "%.2f".format(record.price),
+            "%.1f".format(record.price),
+            dateFormat.format(Date(record.timestamp)),
+        ).any { value ->
+            value.lowercase(Locale.getDefault()).contains(normalizedQuery)
         }
     }
 }

@@ -1,6 +1,8 @@
 package com.mason.milkteastatistics.ui.navigation
 
 import androidx.compose.foundation.layout.padding
+import androidx.compose.animation.EnterTransition
+import androidx.compose.animation.ExitTransition
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.DateRange
 import androidx.compose.material.icons.filled.Home
@@ -79,6 +81,10 @@ fun AppNavigation() {
             navController = navController,
             startDestination = "home",
             modifier = Modifier.padding(innerPadding),
+            enterTransition = { EnterTransition.None },
+            exitTransition = { ExitTransition.None },
+            popEnterTransition = { EnterTransition.None },
+            popExitTransition = { ExitTransition.None },
         ) {
             composable("home") { HomeScreen(viewModel = viewModel) }
             composable("records") { RecordsScreen(viewModel = viewModel) }

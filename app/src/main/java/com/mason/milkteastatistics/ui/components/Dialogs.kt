@@ -3,25 +3,33 @@ package com.mason.milkteastatistics.ui.components
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
+import androidx.compose.material.icons.filled.KeyboardArrowRight
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
-import androidx.compose.material3.DatePicker
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.Surface
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TimePicker
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -31,7 +39,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.mason.milkteastatistics.data.CommonBrand
@@ -41,7 +51,6 @@ import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
-import java.util.TimeZone
 
 // ==================== 添加/编辑弹窗 ====================
 
@@ -72,9 +81,7 @@ fun AddEditRecordDialog(
     }
     var dialogMode by remember(record) { mutableStateOf(RecordDialogMode.Form) }
     var showManageBrands by remember { mutableStateOf(false) }
-    val datePickerState = rememberDatePickerState(
-        initialSelectedDateMillis = selectedTimestamp.toPickerDateMillis(),
-    )
+    var displayedMonthMillis by remember(record) { mutableStateOf(selectedTimestamp.monthStartMillis()) }
     val timePickerState = rememberTimePickerState(
         initialHour = Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
             .get(Calendar.HOUR_OF_DAY),
@@ -89,7 +96,7 @@ fun AddEditRecordDialog(
     LaunchedEffect(dialogMode) {
         when (dialogMode) {
             RecordDialogMode.Date -> {
-                datePickerState.selectedDateMillis = selectedTimestamp.toPickerDateMillis()
+                displayedMonthMillis = selectedTimestamp.monthStartMillis()
             }
 
             RecordDialogMode.Time -> {
@@ -129,20 +136,26 @@ fun AddEditRecordDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(6.dp))
-                        Row(
-                            modifier = Modifier.horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(MaterialTheme.shapes.medium),
                         ) {
-                            purchaseTemplates.forEach { template ->
-                                PurchaseTemplateCard(
-                                    template = template,
-                                    onClick = {
-                                        brand = template.brand
-                                        drinkName = template.drinkName.orEmpty()
-                                        price = "%.2f".format(Locale.US, template.price)
-                                        priceError = false
-                                    },
-                                )
+                            Row(
+                                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            ) {
+                                purchaseTemplates.forEach { template ->
+                                    PurchaseTemplateCard(
+                                        template = template,
+                                        onClick = {
+                                            brand = template.brand
+                                            drinkName = template.drinkName.orEmpty()
+                                            price = "%.2f".format(Locale.US, template.price)
+                                            priceError = false
+                                        },
+                                    )
+                                }
                             }
                         }
                         Spacer(Modifier.height(12.dp))
@@ -156,22 +169,28 @@ fun AddEditRecordDialog(
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                         )
                         Spacer(Modifier.height(6.dp))
-                        Row(
-                            modifier = Modifier.horizontalScroll(rememberScrollState()),
-                            horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .clip(RoundedCornerShape(28.dp)),
                         ) {
-                            commonBrands.forEach { cb ->
-                                Button(
-                                    onClick = { brand = if (brand == cb.name) "" else cb.name },
-                                ) {
-                                    Text(cb.name)
+                            Row(
+                                modifier = Modifier.horizontalScroll(rememberScrollState()),
+                                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                            ) {
+                                commonBrands.forEach { cb ->
+                                    Button(
+                                        onClick = { brand = if (brand == cb.name) "" else cb.name },
+                                    ) {
+                                        Text(cb.name)
+                                    }
                                 }
-                            }
-                            if (onAddCommonBrand != null) {
-                                Button(
-                                    onClick = { showManageBrands = true },
-                                ) {
-                                    Text("管理", style = MaterialTheme.typography.bodyMedium)
+                                if (onAddCommonBrand != null) {
+                                    Button(
+                                        onClick = { showManageBrands = true },
+                                    ) {
+                                        Text("管理", style = MaterialTheme.typography.bodyMedium)
+                                    }
                                 }
                             }
                         }
@@ -244,7 +263,14 @@ fun AddEditRecordDialog(
                     }
                 }
 
-                RecordDialogMode.Date -> DatePicker(state = datePickerState)
+                RecordDialogMode.Date -> CompactCalendarPicker(
+                    selectedTimestamp = selectedTimestamp,
+                    displayedMonthMillis = displayedMonthMillis,
+                    onDisplayedMonthChange = { displayedMonthMillis = it },
+                    onDateSelected = { dateMillis ->
+                        selectedTimestamp = selectedTimestamp.withDateFrom(dateMillis)
+                    },
+                )
                 RecordDialogMode.Time -> TimePicker(state = timePickerState)
             }
         },
@@ -267,9 +293,6 @@ fun AddEditRecordDialog(
                         }
 
                         RecordDialogMode.Date -> {
-                            datePickerState.selectedDateMillis?.let { dateMillis ->
-                                selectedTimestamp = selectedTimestamp.withPickerDate(dateMillis)
-                            }
                             dialogMode = RecordDialogMode.Form
                         }
 
@@ -359,6 +382,118 @@ private fun PurchaseTemplateCard(
     }
 }
 
+@Composable
+private fun CompactCalendarPicker(
+    selectedTimestamp: Long,
+    displayedMonthMillis: Long,
+    onDisplayedMonthChange: (Long) -> Unit,
+    onDateSelected: (Long) -> Unit,
+) {
+    val monthFormat = remember { SimpleDateFormat("yyyy年M月", Locale.getDefault()) }
+    val monthCalendar = remember(displayedMonthMillis) {
+        Calendar.getInstance().apply {
+            timeInMillis = displayedMonthMillis
+            set(Calendar.DAY_OF_MONTH, 1)
+        }
+    }
+    val selectedCalendar = remember(selectedTimestamp) {
+        Calendar.getInstance().apply { timeInMillis = selectedTimestamp }
+    }
+    val daysInMonth = monthCalendar.getActualMaximum(Calendar.DAY_OF_MONTH)
+    val firstWeekdayOffset = (monthCalendar.get(Calendar.DAY_OF_WEEK) + 5) % 7
+    val totalCells = ((firstWeekdayOffset + daysInMonth + 6) / 7) * 7
+    val colorScheme = MaterialTheme.colorScheme
+
+    Column(
+        modifier = Modifier.fillMaxWidth(),
+        verticalArrangement = Arrangement.spacedBy(12.dp),
+    ) {
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween,
+        ) {
+            Text(
+                text = monthFormat.format(Date(displayedMonthMillis)),
+                style = MaterialTheme.typography.titleMedium,
+                fontWeight = FontWeight.Bold,
+                color = colorScheme.onSurface,
+            )
+            Row {
+                IconButton(
+                    onClick = { onDisplayedMonthChange(displayedMonthMillis.addMonths(-1)) },
+                ) {
+                    Icon(
+                        Icons.Default.KeyboardArrowLeft,
+                        contentDescription = "上个月",
+                    )
+                }
+                IconButton(
+                    onClick = { onDisplayedMonthChange(displayedMonthMillis.addMonths(1)) },
+                ) {
+                    Icon(
+                        Icons.Default.KeyboardArrowRight,
+                        contentDescription = "下个月",
+                    )
+                }
+            }
+        }
+
+        Row(modifier = Modifier.fillMaxWidth()) {
+            listOf("一", "二", "三", "四", "五", "六", "日").forEach { weekday ->
+                Text(
+                    text = weekday,
+                    modifier = Modifier.weight(1f),
+                    style = MaterialTheme.typography.labelLarge,
+                    color = colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
+        }
+
+        Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+            repeat(totalCells / 7) { weekIndex ->
+                Row(modifier = Modifier.fillMaxWidth()) {
+                    repeat(7) { dayIndex ->
+                        val cellIndex = weekIndex * 7 + dayIndex
+                        val dayOfMonth = cellIndex - firstWeekdayOffset + 1
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(44.dp),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            if (dayOfMonth in 1..daysInMonth) {
+                                val isSelected = selectedCalendar.get(Calendar.YEAR) == monthCalendar.get(Calendar.YEAR) &&
+                                    selectedCalendar.get(Calendar.MONTH) == monthCalendar.get(Calendar.MONTH) &&
+                                    selectedCalendar.get(Calendar.DAY_OF_MONTH) == dayOfMonth
+                                Surface(
+                                    modifier = Modifier
+                                        .size(40.dp)
+                                        .clickable {
+                                            onDateSelected(displayedMonthMillis.withDayOfMonth(dayOfMonth))
+                                        },
+                                    shape = CircleShape,
+                                    color = if (isSelected) colorScheme.primary else colorScheme.surface,
+                                    contentColor = if (isSelected) colorScheme.onPrimary else colorScheme.onSurface,
+                                ) {
+                                    Box(contentAlignment = Alignment.Center) {
+                                        Text(
+                                            text = dayOfMonth.toString(),
+                                            style = MaterialTheme.typography.bodyLarge,
+                                            textAlign = TextAlign.Center,
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
 // ==================== 常用品牌管理弹窗 ====================
 
 @Composable
@@ -431,20 +566,34 @@ private fun ManageBrandsDialog(
     )
 }
 
-private fun Long.toPickerDateMillis(): Long {
-    val localCal = Calendar.getInstance().apply { timeInMillis = this@toPickerDateMillis }
-    return Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply {
-        clear()
-        set(localCal.get(Calendar.YEAR), localCal.get(Calendar.MONTH), localCal.get(Calendar.DAY_OF_MONTH))
+private fun Long.monthStartMillis(): Long =
+    Calendar.getInstance().apply {
+        timeInMillis = this@monthStartMillis
+        set(Calendar.DAY_OF_MONTH, 1)
+        set(Calendar.HOUR_OF_DAY, 0)
+        set(Calendar.MINUTE, 0)
+        set(Calendar.SECOND, 0)
+        set(Calendar.MILLISECOND, 0)
     }.timeInMillis
-}
 
-private fun Long.withPickerDate(dateMillis: Long): Long {
-    val pickerCal = Calendar.getInstance(TimeZone.getTimeZone("UTC")).apply { timeInMillis = dateMillis }
+private fun Long.addMonths(amount: Int): Long =
+    Calendar.getInstance().apply {
+        timeInMillis = this@addMonths
+        add(Calendar.MONTH, amount)
+    }.timeInMillis
+
+private fun Long.withDayOfMonth(dayOfMonth: Int): Long =
+    Calendar.getInstance().apply {
+        timeInMillis = this@withDayOfMonth
+        set(Calendar.DAY_OF_MONTH, dayOfMonth)
+    }.timeInMillis
+
+private fun Long.withDateFrom(dateMillis: Long): Long {
+    val dateCal = Calendar.getInstance().apply { timeInMillis = dateMillis }
     return Calendar.getInstance().apply {
-        timeInMillis = this@withPickerDate
-        set(Calendar.YEAR, pickerCal.get(Calendar.YEAR))
-        set(Calendar.MONTH, pickerCal.get(Calendar.MONTH))
-        set(Calendar.DAY_OF_MONTH, pickerCal.get(Calendar.DAY_OF_MONTH))
+        timeInMillis = this@withDateFrom
+        set(Calendar.YEAR, dateCal.get(Calendar.YEAR))
+        set(Calendar.MONTH, dateCal.get(Calendar.MONTH))
+        set(Calendar.DAY_OF_MONTH, dateCal.get(Calendar.DAY_OF_MONTH))
     }.timeInMillis
 }
